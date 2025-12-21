@@ -99,8 +99,25 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
         </button>
       </div>
 
-      <div className="text-6xl font-mono font-bold mb-6 tabular-nums tracking-tighter">
+      <div className="text-6xl font-mono font-bold mb-4 tabular-nums tracking-tighter">
         {formatTime(timeLeft)}
+      </div>
+
+      <div className="flex items-center gap-4">
+          <button 
+            onClick={toggleTimer}
+            className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition shadow-lg backdrop-blur-sm"
+          >
+              {isActive ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
+          </button>
+          
+          <button 
+            onClick={resetTimer}
+            className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition text-white/70 hover:text-white"
+            title="Reset Timer"
+          >
+              <RotateCcw size={20} />
+          </button>
       </div>
 
       

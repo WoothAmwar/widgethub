@@ -17,6 +17,11 @@ const INITIAL_STATE: AppState = {
     middle: [],
     right: [],
   },
+  columnWidths: {
+    left: 25,
+    middle: 50,
+    right: 25,
+  },
   background: {
     activeType: 'solid',
     imageValue: '',
@@ -35,7 +40,17 @@ export default function Home() {
     const saved = localStorage.getItem('widgethub-config');
     if (saved) {
       try {
-        setState(JSON.parse(saved));
+        const loadedState = JSON.parse(saved);
+        // Safely merge with defaults to handle new properties (like columnWidths)
+        setState({
+             ...INITIAL_STATE,
+             ...loadedState,
+             columnWidths: loadedState.columnWidths || INITIAL_STATE.columnWidths,
+             background: {
+                 ...INITIAL_STATE.background,
+                 ...loadedState.background
+             }
+        });
       } catch (e) {
         console.error('Failed to load state', e);
       }
@@ -256,6 +271,27 @@ export default function Home() {
       setState(prev => ({ ...prev, blur: value }));
   };
 
+  const updateColumnWidth = (id: ColumnId, width: number) => {
+      setState(prev => {
+          // Validation: check sum <= 100 ?
+          // Actually, let's allow setting it, but UI will show error or we can block here.
+          // User said "Ensure... no greater than 100". STRICT.
+          // Safely access columnWidths with fallback
+          const currentWidths = prev.columnWidths || INITIAL_STATE.columnWidths;
+          
+          const currentTotal = Object.entries(currentWidths).reduce((sum, [key, val]) => key === id ? sum : sum + val, 0);
+          if (currentTotal + width > 100) return prev; // Block update
+          
+          return {
+              ...prev,
+              columnWidths: {
+                  ...currentWidths,
+                  [id]: width
+              }
+          };
+      });
+  };
+
   const exportConfig = () => {
       const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -318,30 +354,36 @@ export default function Home() {
                     widgets={state.columns.left} 
                     isEditing={state.isEditing} 
                     blur={state.blur !== undefined ? state.blur : 10}
+                    width={state.columnWidths?.left ?? 25}
                     onRemoveWidget={removeWidget} 
                     onUpdateWidgetPosition={updateWidgetPosition}
                     onUpdateWidgetHeight={updateWidgetHeight}
                     onUpdateWidgetSettings={updateWidgetSettings}
+                    onUpdateColumnWidth={updateColumnWidth}
                 />
                 <Column 
                     id="middle" 
                     widgets={state.columns.middle} 
                     isEditing={state.isEditing} 
                     blur={state.blur !== undefined ? state.blur : 10}
+                    width={state.columnWidths?.middle ?? 50}
                     onRemoveWidget={removeWidget} 
                     onUpdateWidgetPosition={updateWidgetPosition}
                     onUpdateWidgetHeight={updateWidgetHeight}
                     onUpdateWidgetSettings={updateWidgetSettings}
+                    onUpdateColumnWidth={updateColumnWidth}
                 />
                 <Column 
                     id="right" 
                     widgets={state.columns.right} 
                     isEditing={state.isEditing} 
                     blur={state.blur !== undefined ? state.blur : 10}
+                    width={state.columnWidths?.right ?? 25}
                     onRemoveWidget={removeWidget} 
                     onUpdateWidgetPosition={updateWidgetPosition}
                     onUpdateWidgetHeight={updateWidgetHeight}
                     onUpdateWidgetSettings={updateWidgetSettings}
+                    onUpdateColumnWidth={updateColumnWidth}
                 />
             </>
         )}

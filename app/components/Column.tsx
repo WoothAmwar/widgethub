@@ -10,17 +10,16 @@ interface ColumnProps {
   widgets: Widget[];
   isEditing: boolean;
   blur?: number;
+  width: number;
   onRemoveWidget: (id: string) => void;
   onUpdateWidgetPosition: (id: string, position: 'top' | 'middle' | 'bottom' | 'auto') => void;
   onUpdateWidgetHeight: (id: string, height: number) => void;
   onUpdateWidgetSettings: (id: string, settings: any) => void;
+  onUpdateColumnWidth: (id: ColumnId, width: number) => void;
 }
 
-export function Column({ id, widgets, isEditing, blur, onRemoveWidget, onUpdateWidgetPosition, onUpdateWidgetHeight, onUpdateWidgetSettings }: ColumnProps) {
+export function Column({ id, widgets, isEditing, blur, width, onRemoveWidget, onUpdateWidgetPosition, onUpdateWidgetHeight, onUpdateWidgetSettings, onUpdateColumnWidth }: ColumnProps) {
   const { setNodeRef } = useDroppable({ id });
-
-  // Width classes
-  const widthClass = id === 'middle' ? 'w-[50%]' : 'w-[25%]';
 
   // For single widget alignment
   let justifyClass = 'justify-start'; // Default top
@@ -36,18 +35,54 @@ export function Column({ id, widgets, isEditing, blur, onRemoveWidget, onUpdateW
   const totalHeight = widgets.reduce((sum, w) => sum + (w.customHeight || 0), 0);
   const isInvalid = totalHeight > 100;
 
+  // Visibility logic: disable rendering if width is 0 and NOT editing
+  if (width === 0 && !isEditing) return null;
+
+  // If editing and width is 0, we might want to show a small stub or rely on the fact that container might be tiny?
+  // Actually, if width is really 0%, it won't be visible even in edit mode.
+  // We should enforce a min-width in edit mode via CSS or style to allow grabbing/editing?
+  // Or maybe we treat "width" as the stored preference, but render with min-width if editing?
+  // Let's use a standard style for now. If it's 0%, it disappears. 
+  // Wait, if it disappears, how can user set it back to non-zero?
+  // Problem: If 0, UI is gone. Can't edit.
+  // Solution: If isEditing and width is 0, render with a fixed small width or just don't let it go strictly to 0 via input (min 1?).
+  // User said: "If a column has a value of 0, make it fully disappear in the UI.".
+  // To support bringing it back, we need to ensure the controls for it are visible elsewhere OR ensure it doesnt disappear in Edit mode.
+  // Let's enforce min-width in edit mode.
+  
+  const effectiveWidth = (isEditing && width < 10) ? 10 : width; // Min 10% in edit mode to be usable
+
   return (
     <div
       ref={setNodeRef}
-      className={`${widthClass} h-full flex flex-col ${justifyClass} transition-all p-2 ${isEditing ? 'bg-white/5 rounded-lg relative pt-16' : ''}`}
+      className={`h-full flex flex-col ${justifyClass} transition-all p-2 ${isEditing ? 'bg-white/5 rounded-lg relative pt-20' : ''}`}
+      style={{ width: `${effectiveWidth}%` }}
     >
-      {/* Height Controls in Edit Mode */}
-      {isEditing && widgets.length > 0 && (
+      {/* Height & Width Controls in Edit Mode */}
+      {isEditing && (
         <div className="absolute top-0 left-0 right-0 p-2 flex flex-col items-center z-30 bg-black/50 backdrop-blur-sm rounded-t-lg">
+           
+           {/* Column Width Input */}
+           <div className="flex items-center gap-1 mb-2">
+               <span className="text-[10px] text-zinc-300 uppercase font-bold">Col Width</span>
+               <input 
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={width}
+                    onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val)) onUpdateColumnWidth(id, val);
+                    }}
+                    className="w-10 text-center text-xs p-1 rounded bg-white/10 text-white focus:outline-none focus:bg-white/20"
+               />
+               <span className="text-xs text-zinc-300">%</span>
+           </div>
+
            <div className="flex gap-2">
             {widgets.map((w, idx) => (
+              <div key={w.id}>
                 <input
-                    key={w.id}
                     type="number"
                     min="1"
                     max="100"
@@ -59,6 +94,8 @@ export function Column({ id, widgets, isEditing, blur, onRemoveWidget, onUpdateW
                     }}
                     className={`w-12 text-center text-xs p-1 rounded ${isInvalid ? 'bg-red-500/50 text-white' : 'bg-white/10 text-white'}`}
                 />
+                <span className="text-xs text-zinc-300">%</span>
+              </div>
             ))}
            </div>
            {isInvalid && (

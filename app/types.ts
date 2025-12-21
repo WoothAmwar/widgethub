@@ -14,6 +14,9 @@ export interface AppState {
     columns: {
         [key in ColumnId]: Widget[];
     };
+    columnWidths: {
+        [key in ColumnId]: number; // Percentage 0-100
+    };
     background: {
         activeType: 'solid' | 'image';
         imageValue: string;
