@@ -1,65 +1,373 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
+import { Widget, ColumnId, AppState, WidgetType } from './types';
+import { Column } from './components/Column';
+import { Controls } from './components/Controls';
+import { WidgetWrapper } from './components/WidgetWrapper';
+
+// Helper to generate IDs
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
+const INITIAL_STATE: AppState = {
+  columns: {
+    left: [],
+    middle: [],
+    right: [],
+  },
+  background: {
+    type: 'solid',
+    value: '#1a1a1a', // Default dark bg
+  },
+  isEditing: false,
+};
 
 export default function Home() {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [state, setState] = useState<AppState>(INITIAL_STATE);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem('widgethub-config');
+    if (saved) {
+      try {
+        setState(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to load state', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('widgethub-config', JSON.stringify(state));
+    }
+  }, [state, mounted]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const findContainer = (id: string): ColumnId | undefined => {
+    if (id in state.columns) {
+      return id as ColumnId;
+    }
+    return (Object.keys(state.columns) as ColumnId[]).find((key) =>
+      state.columns[key].find((w) => w.id === id)
+    );
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    const overId = over?.id;
+
+    if (!overId || active.id === overId) return;
+
+    const activeContainer = findContainer(active.id as string);
+    const overContainer = findContainer(overId as string) || (overId as ColumnId);
+
+    if (!activeContainer || !overContainer || activeContainer === overContainer) {
+      return;
+    }
+
+    // Check limits before moving
+    if (state.columns[overContainer].length >= 3) {
+      // Allow if we are swapping? For now simple restrict
+      // Actually DragOver is for temporary visual, we should allow it to "float" potentially
+      // But let's restrict the drop.
+      return; 
+    }
+
+    setState((prev) => {
+      const activeItems = prev.columns[activeContainer];
+      const overItems = prev.columns[overContainer];
+      const activeIndex = activeItems.findIndex((i) => i.id === active.id);
+      const overIndex = overItems.findIndex((i) => i.id === overId);
+
+      let newIndex;
+      if (overId in prev.columns) {
+        newIndex = overItems.length + 1;
+      } else {
+        const isBelowOverItem =
+          over &&
+          active.rect.current.translated &&
+          active.rect.current.translated.top > over.rect.top + over.rect.height;
+
+        const modifier = isBelowOverItem ? 1 : 0;
+        newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
+      }
+
+      return {
+        ...prev,
+        columns: {
+          ...prev.columns,
+          [activeContainer]: [
+            ...prev.columns[activeContainer].filter((item) => item.id !== active.id),
+          ],
+          [overContainer]: [
+            ...prev.columns[overContainer].slice(0, newIndex),
+            activeItems[activeIndex],
+            ...prev.columns[overContainer].slice(newIndex, overItems.length),
+          ],
+        },
+      };
+    });
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    const activeContainer = findContainer(active.id as string);
+    const overContainer = findContainer(over?.id as string) || (over?.id as ColumnId);
+
+    if (
+      activeContainer &&
+      overContainer &&
+      (activeContainer !== overContainer || (over && active.id !== over.id))
+    ) {
+       // Check constraints again for final drop
+       if (activeContainer !== overContainer && state.columns[overContainer].length > 3) {
+           // Revert? (Complex to revert here without prev state ref, mostly rely on logic preventing the move)
+           // If we already moved in dragOver, we might have 4 items. We need to trim or prevent.
+           // Ideally we prevent in DragOver. A better way is:
+           // If destination has >= 3, don't allow move.
+       }
+
+      const activeIndex = state.columns[activeContainer].findIndex((w) => w.id === active.id);
+      const overIndex = state.columns[overContainer].findIndex((w) => w.id === over?.id);
+
+      if (activeIndex !== overIndex || activeContainer !== overContainer) {
+        setState((prev) => {
+             // Logic repeated from dragOver mostly for sorting within same container
+             if (activeContainer === overContainer) {
+                 return {
+                    ...prev,
+                    columns: {
+                        ...prev.columns,
+                        [activeContainer]: arrayMove(prev.columns[activeContainer], activeIndex, overIndex)
+                    }
+                 };
+             }
+             return prev; // Already handled cross-container in DragOver
+        });
+      }
+    }
+    setActiveId(null);
+  };
+
+  // Constraint check helper for DragOver
+  // (Simplified: we let dnd-kit handle the visuals, but we could add custom collision detection)
+
+  const addWidget = (type: WidgetType) => {
+    // Find column with space
+    const targetCol = (['left', 'middle', 'right'] as ColumnId[]).find(id => state.columns[id].length < 3);
+    if (!targetCol) {
+        alert('All columns are full (max 3 per column). Remove a widget first.');
+        return;
+    }
+
+    const newWidget: Widget = {
+        id: generateId(),
+        type,
+        settings: {}
+    };
+
+    setState(prev => ({
+        ...prev,
+        columns: {
+            ...prev.columns,
+            [targetCol]: [...prev.columns[targetCol], newWidget]
+        }
+    }));
+  };
+
+  const removeWidget = (id: string) => {
+      const colId = findContainer(id);
+      if (!colId) return;
+      setState(prev => ({
+          ...prev,
+          columns: {
+              ...prev.columns,
+              [colId]: prev.columns[colId].filter(w => w.id !== id)
+          }
+      }));
+  };
+
+  const updateWidgetPosition = (id: string, position: 'top' | 'middle' | 'bottom' | 'auto') => {
+      const colId = findContainer(id);
+      if (!colId) return;
+      
+      setState(prev => ({
+          ...prev,
+          columns: {
+              ...prev.columns,
+              [colId]: prev.columns[colId].map(w => w.id === id ? { ...w, positionPreference: position } : w)
+          }
+      }));
+  };
+
+  const updateWidgetHeight = (id: string, height: number) => {
+      const colId = findContainer(id);
+      if (!colId) return;
+      
+      setState(prev => ({
+          ...prev,
+          columns: {
+              ...prev.columns,
+              [colId]: prev.columns[colId].map(w => w.id === id ? { ...w, customHeight: height } : w)
+          }
+      }));
+  };
+
+  const updateWidgetSettings = (id: string, settings: any) => {
+      const colId = findContainer(id);
+      if (!colId) return;
+
+      setState(prev => ({
+          ...prev,
+          columns: {
+             ...prev.columns,
+             [colId]: prev.columns[colId].map(w => w.id === id ? { ...w, settings: { ...w.settings, ...settings } } : w)
+          }
+      }));
+  };
+
+  const updateBackground = (value: string) => {
+      setState(prev => ({ ...prev, background: { type: 'image', value } }));
+  };
+
+  const updateBlur = (value: number) => {
+      setState(prev => ({ ...prev, blur: value }));
+  };
+
+  const exportConfig = () => {
+      const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'widgethub-config.json';
+      a.click();
+      URL.revokeObjectURL(url);
+  };
+
+  const importConfig = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+          try {
+              const config = JSON.parse(event.target?.result as string);
+              // Basic validation could be improved
+              if (config.columns && config.background) {
+                  setState(config);
+              }
+          } catch (error) {
+              console.error('Invalid config file', error);
+          }
+      };
+      reader.readAsText(file);
+  };
+
+  const activeWidget = activeId ? (Object.values(state.columns).flat().find(w => w.id === activeId)) : null;
+
+  // Check validity
+  const checkValidity = () => {
+      for (const col of Object.values(state.columns)) {
+          const total = col.reduce((sum, w) => sum + (w.customHeight || 0), 0);
+          if (total > 100) return false;
+      }
+      return true;
+  };
+  const isValid = checkValidity();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <main 
+        className="h-screen w-full flex overflow-hidden transition-all duration-500 bg-cover bg-center"
+        style={{ 
+            backgroundImage: state.background.type === 'image' ? `url(${state.background.value})` : undefined,
+            backgroundColor: state.background.type === 'solid' ? state.background.value : undefined
+        }}
+      >
+        {!mounted ? null : (
+            <>
+                <Column 
+                    id="left" 
+                    widgets={state.columns.left} 
+                    isEditing={state.isEditing} 
+                    blur={state.blur !== undefined ? state.blur : 10}
+                    onRemoveWidget={removeWidget} 
+                    onUpdateWidgetPosition={updateWidgetPosition}
+                    onUpdateWidgetHeight={updateWidgetHeight}
+                    onUpdateWidgetSettings={updateWidgetSettings}
+                />
+                <Column 
+                    id="middle" 
+                    widgets={state.columns.middle} 
+                    isEditing={state.isEditing} 
+                    blur={state.blur !== undefined ? state.blur : 10}
+                    onRemoveWidget={removeWidget} 
+                    onUpdateWidgetPosition={updateWidgetPosition}
+                    onUpdateWidgetHeight={updateWidgetHeight}
+                    onUpdateWidgetSettings={updateWidgetSettings}
+                />
+                <Column 
+                    id="right" 
+                    widgets={state.columns.right} 
+                    isEditing={state.isEditing} 
+                    blur={state.blur !== undefined ? state.blur : 10}
+                    onRemoveWidget={removeWidget} 
+                    onUpdateWidgetPosition={updateWidgetPosition}
+                    onUpdateWidgetHeight={updateWidgetHeight}
+                    onUpdateWidgetSettings={updateWidgetSettings}
+                />
+            </>
+        )}
+
+        <DragOverlay>
+            {activeWidget ? (
+               <div className="opacity-80">
+                   <WidgetWrapper 
+                     widget={activeWidget} 
+                     totalInColumn={1} 
+                     isEditing={true} 
+                     blur={state.blur !== undefined ? state.blur : 10}
+                     onRemove={() => {}} 
+                     onUpdatePosition={() => {}} 
+                     onUpdateSettings={() => {}}
+                   /> 
+               </div>
+            ) : null}
+        </DragOverlay>
+
+        <Controls 
+            isEditing={state.isEditing} 
+            disableEdit={!isValid}
+            onToggleEdit={() => setState(prev => ({ ...prev, isEditing: !prev.isEditing }))}
+            onAddWidget={addWidget}
+            onExport={exportConfig}
+            onImport={importConfig}
+            // onUpdateBackground={updateBackground}
+            onUpdateBlur={updateBlur}
+            blur={state.blur !== undefined ? state.blur : 10}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
       </main>
-    </div>
+    </DndContext>
   );
 }
