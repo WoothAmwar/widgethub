@@ -500,8 +500,11 @@ export default function SpotifyWidget({ blur = 0, isEditing = false, isHidden = 
 
     return (
         <div 
-            className="flex flex-col w-full h-full rounded-2xl text-white shadow-lg overflow-hidden relative bg-black/40 transition-all duration-300"
-            style={{ backdropFilter: `blur(${blur}px)` }}
+            className="flex flex-col w-full h-full rounded-2xl text-white shadow-lg overflow-hidden relative transition-colors duration-300"
+            style={{ 
+                backdropFilter: `blur(${blur}px)`,
+                backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
+            }}
         >
             {renderContent()}
         </div>

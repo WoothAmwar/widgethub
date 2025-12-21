@@ -61,8 +61,11 @@ export default function TodoWidget({ blur = 0, settings, onSettingsChange }: Tod
 
   return (
     <div 
-        className="flex flex-col h-full w-full rounded-2xl p-4 text-white shadow-lg overflow-hidden bg-black/30"
-        style={{ backdropFilter: `blur(${blur}px)` }}
+        className="flex flex-col h-full w-full rounded-2xl p-4 text-white shadow-lg overflow-hidden transition-colors duration-300"
+        style={{ 
+            backdropFilter: `blur(${blur}px)`,
+            backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
+        }}
     >
       <h3 className="font-bold mb-3 text-lg">To-Do</h3>
       

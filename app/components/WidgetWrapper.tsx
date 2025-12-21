@@ -101,13 +101,20 @@ export function WidgetWrapper({
             <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full relative group p-2">
                  {renderContent()}
                  {isEditing && (
-                    <button 
+                  <div className="absolute top-2 right-2 flex flex-col items-end gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-2 p-2">
+                      <div {...listeners} className="p-1 bg-black/50 rounded-md cursor-grab active:cursor-grabbing text-white">
+                        <GripVertical size={16} />
+                      </div>
+                      <button 
                         onClick={() => onRemove(widget.id)}
-                        className="absolute top-2 right-2 bg-red-500 rounded-full p-1 text-white opacity-0 group-hover:opacity-100 transition shadow-lg z-50"
+                        className="p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition shadow-lg z-50"
                         onPointerDown={e => e.stopPropagation()} 
-                    >
+                      >
                         <X size={12} />
-                    </button>
+                      </button>
+                    </div>
+                  </div>
                  )}
             </div>
        )

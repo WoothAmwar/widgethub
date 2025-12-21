@@ -83,8 +83,11 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
 
   return (
     <div 
-        className="flex flex-col items-center justify-center h-full w-full rounded-2xl p-4 text-white shadow-lg relative overflow-hidden bg-black/30"
-        style={{ backdropFilter: `blur(${blur}px)` }}
+        className="flex flex-col items-center justify-center h-full w-full rounded-2xl p-4 text-white shadow-lg relative overflow-hidden transition-colors duration-300"
+        style={{ 
+            backdropFilter: `blur(${blur}px)`,
+            backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
+        }}
     >
       {/* Animedoro Toggle */}
       <div className="absolute top-2 right-2">
