@@ -31,7 +31,7 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
 
       // Set time for new mode
       if (isAnimedoro) {
-          setTimeLeft(nextMode === 'work' ? 40 * 60 : 20 * 60);
+          setTimeLeft(nextMode === 'work' ? 40 * 60 : 25 * 60);
       } else {
           setTimeLeft(nextMode === 'work' ? 25 * 60 : 5 * 60);
       }
@@ -45,7 +45,7 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
   const resetTimer = () => {
     setIsActive(false);
     if (isAnimedoro) {
-       setTimeLeft(mode === 'work' ? 40 * 60 : 20 * 60);
+       setTimeLeft(mode === 'work' ? 40 * 60 : 25 * 60);
     } else {
        setTimeLeft(mode === 'work' ? 25 * 60 : 5 * 60);
     }
@@ -55,7 +55,7 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
     setMode(newMode);
     setIsActive(false);
     if (isAnimedoro) {
-        setTimeLeft(newMode === 'work' ? 40 * 60 : 20 * 60);
+        setTimeLeft(newMode === 'work' ? 40 * 60 : 25 * 60);
     } else {
         setTimeLeft(newMode === 'work' ? 25 * 60 : 5 * 60);
     }

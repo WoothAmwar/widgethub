@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Check, Download, Upload, Plus, Image as ImageIcon } from 'lucide-react';
+import { Edit2, Check, Download, Upload, Plus, Image as ImageIcon, Maximize, Minimize } from 'lucide-react';
 import { WidgetType, AppState } from '../types';
 
 interface ControlsProps {
@@ -20,6 +20,7 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
   const [imageUrl, setImageUrl] = useState(background.imageValue);
   const [colorValue, setColorValue] = useState(background.colorValue);
   const [activeType, setActiveType] = useState<'solid' | 'image'>(background.activeType);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Sync local state when prop updates or modal opens
   useEffect(() => {
@@ -29,6 +30,15 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
         setActiveType(background.activeType);
     }
   }, [showBgModal, background]);
+
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
+  }, []);
 
   const handleBgSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +109,23 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
           className={`p-4 rounded-full shadow-lg transition-all transform hover:scale-105 ${disableEdit ? 'bg-gray-500 cursor-not-allowed opacity-50' : isEditing ? 'bg-green-500 hover:bg-green-600' : 'bg-white/10 hover:bg-white/20 backdrop-blur-md'}`}
         >
           {isEditing ? <Check className="text-white" size={24} /> : <Edit2 className="text-white" size={24} />}
+        </button>
+
+        <button
+          onClick={() => {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen();
+            } else {
+              document.exitFullscreen();
+            }
+          }}
+          className="p-4 rounded-full shadow-lg transition-all transform hover:scale-105 bg-white/10 hover:bg-white/20 backdrop-blur-md"
+        >
+           {isFullscreen ? (
+             <Minimize className="text-white" size={24} />
+           ) : (
+             <Maximize className="text-white" size={24} />
+           )}
         </button>
       </div>
 
