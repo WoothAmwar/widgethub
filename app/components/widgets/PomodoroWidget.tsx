@@ -55,7 +55,7 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
       // Reset times based on new mode
       if (newAnimedoro) {
           // Animedoro defaults
-          setTimeLeft(mode === 'work' ? 40 * 60 : 20 * 60);
+          setTimeLeft(mode === 'work' ? 40 * 60 : 25 * 60);
       } else {
           // Pomodoro defaults
           setTimeLeft(mode === 'work' ? 25 * 60 : 5 * 60);
