@@ -13,6 +13,7 @@ declare global {
 interface SpotifyWidgetProps {
     blur?: number;
     isEditing?: boolean;
+    isHidden?: boolean;
     settings?: {
         clientId?: string;
     };
@@ -35,7 +36,7 @@ const SCOPES = [
     "user-modify-playback-state"
 ];
 
-export default function SpotifyWidget({ blur = 0, isEditing = false, settings, onSettingsChange }: SpotifyWidgetProps) {
+export default function SpotifyWidget({ blur = 0, isEditing = false, isHidden = false,settings, onSettingsChange }: SpotifyWidgetProps) {
     const [token, setToken] = useState<string | null>(null);
     const [clientId, setClientId] = useState(settings?.clientId || DEFAULT_CLIENT_ID);
     const [isPremium, setIsPremium] = useState<boolean | null>(null);
@@ -407,26 +408,30 @@ export default function SpotifyWidget({ blur = 0, isEditing = false, settings, o
         return (
             <div className="flex flex-col h-full w-full relative group">
                 {/* Background Image Blur */}
-                <div 
-                    className="absolute inset-0 bg-cover bg-center opacity-30 scale-110 pointer-events-none transition-all duration-700" 
-                    style={{ backgroundImage: `url(${currentTrack.albumArt})` }} 
-                />
+                {!isHidden ? (
+                    <div 
+                        className="absolute inset-0 bg-cover bg-center opacity-30 scale-110 pointer-events-none transition-all duration-700" 
+                        style={{ backgroundImage: `url(${currentTrack.albumArt})` }} 
+                    />
+                ) : null}
                 
                 {/* Content */}
                 <div className="relative z-10 flex flex-col h-full p-4">
-                    <div className="flex items-start space-x-3 flex-1 overflow-hidden">
-                        <img 
-                            src={currentTrack.albumArt} 
-                            alt="Album Art" 
-                            className={`w-16 h-16 rounded-lg shadow-lg ${!paused ? 'animate-pulse-subtle' : ''}`} 
-                        />
-                        <div className="flex-1 min-w-0 flex flex-col justify-center h-16">
-                            <h3 className="font-bold text-white truncate text-base leading-tight">
-                                {currentTrack.name}
-                            </h3>
-                            <p className="text-white/70 text-sm truncate">{currentTrack.artist}</p>
+                    {!isHidden ? (
+                        <div className="flex items-start space-x-3 flex-1 overflow-hidden">
+                            <img 
+                                src={currentTrack.albumArt} 
+                                alt="Album Art" 
+                                className={`w-16 h-16 rounded-lg shadow-lg ${!paused ? 'animate-pulse-subtle' : ''}`} 
+                            />
+                            <div className="flex-1 min-w-0 flex flex-col justify-center h-16">
+                                <h3 className="font-bold text-white truncate text-base leading-tight">
+                                    {currentTrack.name}
+                                </h3>
+                                <p className="text-white/70 text-sm truncate">{currentTrack.artist}</p>
+                            </div>
                         </div>
-                    </div>
+                    ) : null}
 
                     {/* Controls */}
                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10">

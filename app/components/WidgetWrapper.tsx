@@ -90,6 +90,7 @@ export function WidgetWrapper({
       case 'pomodoro': return <PomodoroWidget {...widgetProps} />;
       case 'weather': return <WeatherWidget {...widgetProps} />;
       case 'spotify': return <SpotifyWidget {...widgetProps} />;
+      case 'spotify_hidden': return <SpotifyWidget {...widgetProps} isHidden={true} />;
       case 'spacer': return <SpacerWidget isEditing={isEditing} />;
       default: return null;
     }
