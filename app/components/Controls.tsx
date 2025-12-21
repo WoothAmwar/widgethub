@@ -97,6 +97,7 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
                 <button onClick={() => onAddWidget('youtube')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">YouTube</button>
                 <button onClick={() => onAddWidget('pomodoro')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Pomodoro</button>
                 <button onClick={() => onAddWidget('weather')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Weather</button>
+                <button onClick={() => onAddWidget('spotify')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Spotify</button>
                 <button onClick={() => onAddWidget('spacer')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Spacer</button>
              </div>
 

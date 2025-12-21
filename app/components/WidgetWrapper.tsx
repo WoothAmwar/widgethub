@@ -9,6 +9,7 @@ import TodoWidget from './widgets/TodoWidget';
 import YoutubeWidget from './widgets/YoutubeWidget';
 import PomodoroWidget from './widgets/PomodoroWidget';
 import WeatherWidget from './widgets/WeatherWidget';
+import SpotifyWidget from './widgets/SpotifyWidget';
 import SpacerWidget from './widgets/SpacerWidget';
 
 interface WidgetWrapperProps {
@@ -88,6 +89,7 @@ export function WidgetWrapper({
       case 'youtube': return <YoutubeWidget {...widgetProps} />;
       case 'pomodoro': return <PomodoroWidget {...widgetProps} />;
       case 'weather': return <WeatherWidget {...widgetProps} />;
+      case 'spotify': return <SpotifyWidget {...widgetProps} />;
       case 'spacer': return <SpacerWidget isEditing={isEditing} />;
       default: return null;
     }
