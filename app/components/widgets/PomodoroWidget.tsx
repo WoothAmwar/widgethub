@@ -20,8 +20,21 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
-      setIsActive(false);
+    } else if (timeLeft === 0 && isActive) {
+      // Play audio
+      const audio = new Audio('/timer_end.mp3');
+      audio.play().catch((e) => console.error('Error playing audio:', e));
+
+      // Switch mode
+      const nextMode = mode === 'work' ? 'break' : 'work';
+      setMode(nextMode);
+
+      // Set time for new mode
+      if (isAnimedoro) {
+          setTimeLeft(nextMode === 'work' ? 40 * 60 : 20 * 60);
+      } else {
+          setTimeLeft(nextMode === 'work' ? 25 * 60 : 5 * 60);
+      }
     }
 
     return () => clearInterval(interval);

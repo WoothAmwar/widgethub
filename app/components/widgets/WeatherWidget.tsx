@@ -191,7 +191,7 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
 
                     {/* Footer / Condition (Hide if inline/very small) */}
                     {!isInline && (
-                        <div className="text-white/70 font-medium text-xs">
+                        <div className="text-white/70 font-medium text-s">
                             {weather.condition}
                         </div>
                     )}
