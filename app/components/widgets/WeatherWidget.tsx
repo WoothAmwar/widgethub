@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Cloud, Sun, CloudRain, CloudSnow, Loader2, MapPin } from 'lucide-react';
 
 interface WeatherData {
@@ -23,6 +23,9 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
   const [loading, setLoading] = useState(false);
   const [isEditingCity, setIsEditingCity] = useState(false);
   const [inputCity, setInputCity] = useState(city);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     if (settings?.city) {
@@ -31,16 +34,30 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
     } else {
         fetchWeather(city); // Default
     }
-  }, []); // Run once on mount if settings provided, or if defaults needed.
+  }, []); 
 
-  // Re-fetch if settings change externally
-   useEffect(() => {
+  useEffect(() => {
     if (settings?.city && settings.city !== city) {
         setCity(settings.city);
         fetchWeather(settings.city);
     }
   }, [settings?.city]);
 
+  useEffect(() => {
+      if (!containerRef.current) return;
+      
+      const observer = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+              setSize({
+                  width: entry.contentRect.width,
+                  height: entry.contentRect.height
+              });
+          }
+      });
+
+      observer.observe(containerRef.current);
+      return () => observer.disconnect();
+  }, []);
 
   const fetchWeather = async (cityName: string) => {
     setLoading(true);
@@ -73,7 +90,6 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
   };
 
   const decodeWeatherCode = (code: number): string => {
-      // Simplified mapping
       if (code <= 3) return 'Clear';
       if (code <= 48) return 'Cloudy';
       if (code <= 67) return 'Rain';
@@ -84,13 +100,13 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
       return 'Unknown';
   };
 
-  const getWeatherIcon = (condition: string) => {
+  const getWeatherIcon = (condition: string, iconSize: number) => {
       switch (condition) {
-          case 'Clear': return <Sun className="text-yellow-400" size={48} />;
-          case 'Cloudy': return <Cloud className="text-gray-400" size={48} />;
-          case 'Rain': return <CloudRain className="text-blue-400" size={48} />;
-          case 'Snow': return <CloudSnow className="text-white" size={48} />;
-          default: return <Sun className="text-yellow-400" size={48} />;
+          case 'Clear': return <Sun className="text-yellow-400" size={iconSize} />;
+          case 'Cloudy': return <Cloud className="text-gray-400" size={iconSize} />;
+          case 'Rain': return <CloudRain className="text-blue-400" size={iconSize} />;
+          case 'Snow': return <CloudSnow className="text-white" size={iconSize} />;
+          default: return <Sun className="text-yellow-400" size={iconSize} />;
       }
   };
 
@@ -104,52 +120,76 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
     }
   };
 
+  // Logic for responsive layout
+  // Height < 120 -> Hide Icon?
+  // Height < 80 -> Inline
+  const isSmallHeight = size.height < 150; 
+  const isVerySmallHeight = size.height < 100;
+  
+  // Also consider width
+  const isSmallWidth = size.width < 140;
+
+  const showIcon = !isSmallHeight && !isSmallWidth;
+  const isInline = isVerySmallHeight;
+
   return (
     <div 
-        className="flex flex-col h-full w-full rounded-2xl p-6 text-white shadow-lg overflow-hidden relative bg-black/30"
+        ref={containerRef}
+        className="flex flex-col h-full w-full rounded-2xl p-4 text-white shadow-lg overflow-hidden relative bg-black/30"
         style={{ backdropFilter: `blur(${blur}px)` }}
     >
         {isEditingCity ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
+            <div className="flex flex-col items-center justify-center h-full gap-2">
                 <form onSubmit={handleCitySubmit} className="flex flex-col gap-2 w-full">
                     <input 
                         type="text" 
                         value={inputCity} 
                         onChange={e => setInputCity(e.target.value)} 
-                        placeholder="Enter City"
-                        className="bg-white/10 p-2 rounded text-center focus:outline-none"
+                        placeholder="City"
+                        className="bg-white/10 p-1.5 rounded text-center focus:outline-none text-sm w-full"
                         autoFocus
                     />
-                    <button type="submit" className="bg-white/20 p-2 rounded hover:bg-white/30 text-xs font-bold">Search</button>
-                    <button type="button" onClick={() => setIsEditingCity(false)} className="text-white/50 text-xs hover:text-white">Cancel</button>
+                    <div className="flex gap-1 justify-center">
+                        <button type="submit" className="bg-white/20 p-1 px-2 rounded hover:bg-white/30 text-[10px] font-bold">OK</button>
+                        <button type="button" onClick={() => setIsEditingCity(false)} className="text-white/50 text-[10px] hover:text-white px-2">Cancel</button>
+                    </div>
                 </form>
             </div>
         ) : (
            <>
               {loading ? (
                   <div className="flex-1 flex items-center justify-center">
-                      <Loader2 className="animate-spin text-white/50" size={32} />
+                      <Loader2 className="animate-spin text-white/50" size={24} />
                   </div>
               ) : weather ? (
-                <div className="flex flex-col items-center justify-between h-full py-4">
-                    <div className="flex items-center gap-2 cursor-pointer hover:bg-white/10 px-2 py-1 rounded transition" onClick={() => { setIsEditingCity(true); setInputCity(city); }}>
-                        <MapPin size={16} className="text-white/70" />
-                        <span className="font-medium text-lg">{weather.city}</span>
+                <div className={`flex ${isInline ? 'flex-row items-center justify-between px-2' : 'flex-col items-center justify-between'} h-full w-full`}>
+                    
+                    {/* Header / City */}
+                    <div className="flex items-center gap-1 cursor-pointer hover:bg-white/10 px-2 py-0.5 rounded transition" onClick={() => { setIsEditingCity(true); setInputCity(city); }}>
+                        {!isInline && <MapPin size={14} className="text-white/70" />}
+                        <span className={`font-medium ${isInline ? 'text-sm' : 'text-base'}`}>{weather.city}</span>
                     </div>
                     
-                    <div className="flex flex-col items-center">
-                        {getWeatherIcon(weather.condition)}
-                        <span className="text-4xl font-bold mt-2">{Math.round((weather.temperature * 9/5) + 32)}°F</span>
-                        {/* <span className="text-white/60 text-sm mt-1">{Math.round((weather.temperature * 9/5) + 32)}°F</span> */}
+                    {/* Main Info */}
+                    <div className={`flex ${isInline ? 'items-center gap-2' : 'flex-col items-center'}`}>
+                        {showIcon && (
+                            <div className="mb-1">
+                                {getWeatherIcon(weather.condition, 40)}
+                            </div>
+                        )}
+                        <span className={`${isInline ? 'text-lg' : 'text-3xl'} font-bold`}>{Math.round((weather.temperature * 9/5) + 32)}°F</span>
                     </div>
 
-                    <div className="text-white/70 font-medium">
-                        {weather.condition}
-                    </div>
+                    {/* Footer / Condition (Hide if inline/very small) */}
+                    {!isInline && (
+                        <div className="text-white/70 font-medium text-xs">
+                            {weather.condition}
+                        </div>
+                    )}
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-white/50 cursor-pointer" onClick={() => setIsEditingCity(true)}>
-                    <span>Tap to set city</span>
+                <div className="flex-1 flex flex-col items-center justify-center text-white/50 cursor-pointer text-center p-2" onClick={() => setIsEditingCity(true)}>
+                    <span className="text-xs">Tap to set city</span>
                 </div>
               )}
            </>

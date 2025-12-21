@@ -15,8 +15,9 @@ export interface AppState {
         [key in ColumnId]: Widget[];
     };
     background: {
-        type: 'solid' | 'image';
-        value: string; // Hex code or URL
+        activeType: 'solid' | 'image';
+        imageValue: string;
+        colorValue: string;
     };
     blur?: number; // 0-100
     isEditing: boolean;

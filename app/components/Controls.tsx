@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Edit2, Check, Download, Upload, Plus, Image as ImageIcon } from 'lucide-react';
-import { WidgetType } from '../types';
+import { WidgetType, AppState } from '../types';
 
 interface ControlsProps {
   isEditing: boolean;
@@ -11,17 +11,35 @@ interface ControlsProps {
   onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onUpdateBlur: (value: number) => void;
   blur: number;
+  onUpdateBackground: (updates: Partial<AppState['background']>) => void;
+  background: AppState['background'];
 }
 
-export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, onExport, onImport, onUpdateBlur, blur }: ControlsProps) {
+export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, onExport, onImport, onUpdateBlur, blur, onUpdateBackground, background }: ControlsProps) {
   const [showBgModal, setShowBgModal] = useState(false);
-  const [bgInput, setBgInput] = useState('');
+  const [imageUrl, setImageUrl] = useState(background.imageValue);
+  const [colorValue, setColorValue] = useState(background.colorValue);
+  const [activeType, setActiveType] = useState<'solid' | 'image'>(background.activeType);
+
+  // Sync local state when prop updates or modal opens
+  useEffect(() => {
+    if (showBgModal) {
+        setImageUrl(background.imageValue);
+        setColorValue(background.colorValue);
+        setActiveType(background.activeType);
+    }
+  }, [showBgModal, background]);
 
   const handleBgSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // if (bgInput) onUpdateBackground(bgInput);
+    onUpdateBackground({ activeType, imageValue: imageUrl, colorValue });
     setShowBgModal(false);
-    setBgInput('');
+  };
+
+  const isValidColor = (color: string) => {
+    const s = new Option().style;
+    s.color = color;
+    return s.color !== '';
   };
 
   return (
@@ -87,20 +105,66 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
       {/* Background Modal */}
       {showBgModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowBgModal(false)}>
-          <div className="bg-zinc-900 p-6 rounded-2xl w-full max-w-md border border-white/10" onClick={e => e.stopPropagation()}>
-             <h3 className="text-white text-lg font-semibold mb-4">Set Background Image</h3>
-             <form onSubmit={handleBgSubmit} className="flex flex-col gap-4">
-               <input 
-                 type="text" 
-                 placeholder="Image URL" 
-                 value={bgInput} 
-                 onChange={e => setBgInput(e.target.value)}
-                 className="bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30"
-                 autoFocus
-               />
-               <button type="submit" className="bg-white text-black font-bold py-2 rounded-lg hover:bg-gray-200 transition">
-                 Set Background
-               </button>
+          <div className="bg-zinc-900 p-6 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl" onClick={e => e.stopPropagation()}>
+             <h3 className="text-white text-lg font-semibold mb-6">Background Settings</h3>
+             <form onSubmit={handleBgSubmit} className="flex flex-col gap-6">
+               
+               {/* Toggle Type */}
+               <div className="flex bg-black/30 p-1 rounded-lg">
+                   <button 
+                    type="button" 
+                    className={`flex-1 py-1.5 text-sm rounded-md transition-all ${activeType === 'solid' ? 'bg-white/20 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+                    onClick={() => setActiveType('solid')}
+                   >
+                    Solid Color
+                   </button>
+                   <button 
+                    type="button"
+                    className={`flex-1 py-1.5 text-sm rounded-md transition-all ${activeType === 'image' ? 'bg-white/20 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+                    onClick={() => setActiveType('image')}
+                   >
+                    Image URL
+                   </button>
+               </div>
+
+               {/* Inputs */}
+               <div className="flex flex-col gap-4">
+                  <div>
+                      <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">Solid Color (Hex)</label>
+                      <div className="relative">
+                          {/* Color Preview */}
+                          <div 
+                            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border border-white/20 shadow-sm transition-colors"
+                            style={{ backgroundColor: isValidColor(colorValue) ? colorValue : 'transparent' }} 
+                          />
+                          <input 
+                              type="text" 
+                              placeholder="#000000" 
+                              value={colorValue} 
+                              onChange={e => setColorValue(e.target.value)}
+                              className="w-full bg-black/50 border border-white/10 rounded-lg py-2.5 pl-10 pr-3 text-white text-sm focus:outline-none focus:border-white/30 placeholder:text-zinc-600"
+                          />
+                      </div>
+                  </div>
+
+                  <div>
+                      <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">Image URL</label>
+                      <input 
+                          type="text" 
+                          placeholder="https://example.com/image.jpg" 
+                          value={imageUrl} 
+                          onChange={e => setImageUrl(e.target.value)}
+                          className="w-full bg-black/50 border border-white/10 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-white/30 placeholder:text-zinc-600"
+                      />
+                  </div>
+               </div>
+
+               <div className="flex justify-end gap-2 mt-2">
+                 <button type="button" onClick={() => setShowBgModal(false)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition">Cancel</button>
+                 <button type="submit" className="bg-white text-black font-bold py-2 px-6 text-sm rounded-lg hover:bg-gray-200 transition">
+                   Save Changes
+                 </button>
+               </div>
              </form>
           </div>
         </div>

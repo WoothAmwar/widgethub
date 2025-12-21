@@ -18,8 +18,9 @@ const INITIAL_STATE: AppState = {
     right: [],
   },
   background: {
-    type: 'solid',
-    value: '#1a1a1a', // Default dark bg
+    activeType: 'solid',
+    imageValue: '',
+    colorValue: '#1a1a1a', // Default dark bg
   },
   isEditing: false,
 };
@@ -241,8 +242,14 @@ export default function Home() {
       }));
   };
 
-  const updateBackground = (value: string) => {
-      setState(prev => ({ ...prev, background: { type: 'image', value } }));
+  const updateBackground = (updates: Partial<AppState['background']>) => {
+      setState(prev => ({ 
+          ...prev, 
+          background: { 
+              ...prev.background, 
+              ...updates 
+          } 
+      }));
   };
 
   const updateBlur = (value: number) => {
@@ -300,8 +307,8 @@ export default function Home() {
       <main 
         className="h-screen w-full flex overflow-hidden transition-all duration-500 bg-cover bg-center"
         style={{ 
-            backgroundImage: state.background.type === 'image' ? `url(${state.background.value})` : undefined,
-            backgroundColor: state.background.type === 'solid' ? state.background.value : undefined
+            backgroundImage: state.background.activeType === 'image' && state.background.imageValue ? `url(${state.background.imageValue})` : undefined,
+            backgroundColor: state.background.activeType === 'solid' ? state.background.colorValue : undefined
         }}
       >
         {!mounted ? null : (
@@ -362,7 +369,8 @@ export default function Home() {
             onAddWidget={addWidget}
             onExport={exportConfig}
             onImport={importConfig}
-            // onUpdateBackground={updateBackground}
+            onUpdateBackground={updateBackground}
+            background={state.background}
             onUpdateBlur={updateBlur}
             blur={state.blur !== undefined ? state.blur : 10}
         />
