@@ -54,11 +54,30 @@ export function WidgetWrapper({
     zIndex: isDragging ? 100 : 'auto',
   };
 
+  // Font scaling factor (default to 1)
+  const fontSizeFactor = widget.settings?.fontSizeFactor || 1;
+
+  // Firefox-compatible scaling:
+  // scale() zooms the content
+  // width/height compensation ensures the container flows correctly within the parent
+  const contentStyle = {
+    width: `calc(100% / ${fontSizeFactor})`,
+    height: `calc(100% / ${fontSizeFactor})`,
+    transform: `scale(${fontSizeFactor})`,
+    transformOrigin: 'top left',
+  };
+
   // Common props for widgets
   const widgetProps: any = {
       settings: widget.settings,
       onSettingsChange: (newSettings: any) => onUpdateSettings(widget.id, newSettings),
-      blur
+      blur,
+      isEditing // Pass isEditing to all widgets
+  };
+
+  const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newVal = parseFloat(e.target.value);
+      onUpdateSettings(widget.id, { fontSizeFactor: newVal });
   };
 
   // Content for the widget
@@ -98,28 +117,39 @@ export function WidgetWrapper({
       className={`w-full transition-all duration-300 relative flex flex-col p-2 ${isDragging ? 'opacity-50' : ''}`}
       {...attributes} 
     >
-      <div className={`relative w-full h-full group ${isEditing ? 'border-2 border-dashed border-white/30 rounded-xl' : ''}`}>
+      <div className={`relative w-full h-full group ${isEditing ? 'border-2 border-dashed border-white/30 rounded-xl' : ''} overflow-hidden`}>
         
-        {/* Widget Content */}
-        {renderContent()}
+        {/* Widget Content Wrapper for Scaling */}
+        <div style={contentStyle} className="w-full h-full">
+            {renderContent()}
+        </div>
 
         {/* Edit Controls */}
         {isEditing && (
-          <div className="absolute top-2 right-2 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-             <div {...listeners} className="p-1 bg-black/50 rounded-md cursor-grab active:cursor-grabbing text-white">
-                <GripVertical size={16} />
+          <div className="absolute top-2 right-2 flex flex-col items-end gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+             <div className="flex gap-2">
+                <div {...listeners} className="p-1 bg-black/50 rounded-md cursor-grab active:cursor-grabbing text-white">
+                    <GripVertical size={16} />
+                </div>
+                <button onClick={() => onRemove(widget.id)} className="p-1 bg-red-500/80 rounded-md text-white hover:bg-red-600">
+                    <X size={16} />
+                </button>
              </div>
-             <button onClick={() => onRemove(widget.id)} className="p-1 bg-red-500/80 rounded-md text-white hover:bg-red-600">
-                <X size={16} />
-             </button>
-             {/* Position toggles for single widget */}
-             {/* {totalInColumn === 1 && (
-               <div className="flex flex-col gap-1 absolute right-8 top-0 bg-black/80 p-1 rounded">
-                  <button onClick={() => onUpdatePosition(widget.id, 'top')} className={`text-xs p-1 ${widget.positionPreference === 'top' ? 'text-blue-400' : 'text-white'}`}>Top</button>
-                  <button onClick={() => onUpdatePosition(widget.id, 'middle')} className={`text-xs p-1 ${widget.positionPreference === 'middle' ? 'text-blue-400' : 'text-white'}`}>Mid</button>
-                  <button onClick={() => onUpdatePosition(widget.id, 'bottom')} className={`text-xs p-1 ${widget.positionPreference === 'bottom' ? 'text-blue-400' : 'text-white'}`}>Bot</button>
-               </div>
-             )} */}
+             
+             {/* Font Size Slider */}
+             <div className="bg-black/80 p-2 rounded-lg flex flex-col gap-1 items-center" onPointerDown={e => e.stopPropagation()}>
+                <label className="text-[10px] text-white/70 uppercase font-bold">Size</label>
+                <input 
+                    type="range" 
+                    min="0.5" 
+                    max="1.5" 
+                    step="0.1" 
+                    value={fontSizeFactor}
+                    onChange={handleFontSizeChange}
+                    className="w-20 accent-blue-500 h-1"
+                />
+                <span className="text-[10px] text-white">{fontSizeFactor.toFixed(1)}x</span>
+             </div>
           </div>
         )}
       </div>
