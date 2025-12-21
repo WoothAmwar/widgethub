@@ -59,6 +59,15 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
       return () => observer.disconnect();
   }, []);
 
+  // Auto-refresh every 30 minutes
+  useEffect(() => {
+      const interval = setInterval(() => {
+          fetchWeather(city);
+      }, 30 * 60 * 1000); // 30 minutes
+
+      return () => clearInterval(interval);
+  }, [city]);
+
   const fetchWeather = async (cityName: string) => {
     setLoading(true);
     try {

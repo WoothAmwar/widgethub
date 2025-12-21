@@ -13,8 +13,10 @@ interface TodoWidgetProps {
   blur?: number;
   settings?: {
       todos?: Todo[];
+      fontSizeFactor?: number;
+      [key: string]: any;
   };
-  onSettingsChange?: (settings: { todos: Todo[] }) => void;
+  onSettingsChange?: (settings: any) => void;
 }
 
 export default function TodoWidget({ blur = 0, settings, onSettingsChange }: TodoWidgetProps) {
@@ -85,7 +87,18 @@ export default function TodoWidget({ blur = 0, settings, onSettingsChange }: Tod
         ))}
       </div>
 
-      <form onSubmit={addTodo} className="flex gap-2">
+      <form 
+        onSubmit={addTodo} 
+        className="flex gap-2 isolate origin-bottom-left"
+        style={{
+            // Inverse scaling to keep input bar standard size
+            // We scale by 1/factor to counteract parent scale
+            // We multiply width by factor to fill the visual space
+            transform: settings?.fontSizeFactor ? `scale(${1 / settings.fontSizeFactor})` : undefined,
+            width: settings?.fontSizeFactor ? `calc(100% * ${settings.fontSizeFactor})` : '100%',
+        }}
+        onPointerDown={e => e.stopPropagation()} // Prevent drag start from input area if needed
+      >
         <input 
           type="text" 
           value={input} 
