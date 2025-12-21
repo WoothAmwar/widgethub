@@ -20,11 +20,12 @@ interface SpotifyWidgetProps {
     onSettingsChange?: (settings: { clientId?: string }) => void;
 }
 
-interface Track {
+interface PlaybackItem {
     name: string;
     artist: string;
     albumArt: string;
     uri: string;
+    type: 'track' | 'episode' | 'ad' | 'unknown';
 }
 
 const DEFAULT_CLIENT_ID = "87354428e5064686a566255e774dbc93";
@@ -42,7 +43,7 @@ export default function SpotifyWidget({ blur = 0, isEditing = false, isHidden = 
     const [isPremium, setIsPremium] = useState<boolean | null>(null);
     const [player, setPlayer] = useState<any>(null);
     const [paused, setPaused] = useState(true);
-    const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+    const [currentTrack, setCurrentTrack] = useState<PlaybackItem | null>(null);
     const [isActive, setIsActive] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const debugRef = useRef<boolean>(false);
@@ -261,11 +262,27 @@ export default function SpotifyWidget({ blur = 0, isEditing = false, isHidden = 
             player.addListener('player_state_changed', (state: any) => {
                 if (!state) return;
                 
+                const track = state.track_window.current_track;
+                let artistName = "Unknown Artist";
+                let albumArt = "";
+
+                if (track.artists && track.artists.length > 0) {
+                     artistName = track.artists.map((a:any) => a.name).join(', ');
+                } else if (track.album && track.album.name) {
+                     // Sometimes show name might be in album name for episodes in SDK
+                     artistName = track.album.name;
+                }
+                
+                if (track.album && track.album.images && track.album.images.length > 0) {
+                     albumArt = track.album.images[0].url;
+                }
+
                 setCurrentTrack({
-                    name: state.track_window.current_track.name,
-                    artist: state.track_window.current_track.artists.map((a:any) => a.name).join(', '),
-                    albumArt: state.track_window.current_track.album.images[0]?.url,
-                    uri: state.track_window.current_track.uri
+                    name: track.name,
+                    artist: artistName,
+                    albumArt: albumArt,
+                    uri: track.uri,
+                    type: track.type === 'episode' ? 'episode' : 'track'
                 });
                 
                 setPaused(state.paused);
@@ -292,7 +309,8 @@ export default function SpotifyWidget({ blur = 0, isEditing = false, isHidden = 
 
         const poll = async () => {
             try {
-                const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+                // Modified to request episode data
+                const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing?additional_types=track,episode', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -302,11 +320,23 @@ export default function SpotifyWidget({ blur = 0, isEditing = false, isHidden = 
 
                 const data = await res.json();
                 if (data && data.item) {
+                     let artistName = "";
+                     let albumArt = "";
+                     
+                     if (data.item.type === 'episode') {
+                         artistName = data.item.show?.name || "Podcast";
+                         albumArt = data.item.images?.[0]?.url || data.item.show?.images?.[0]?.url;
+                     } else {
+                         artistName = data.item.artists?.map((a:any) => a.name).join(', ');
+                         albumArt = data.item.album?.images?.[0]?.url;
+                     }
+
                      setCurrentTrack({
                         name: data.item.name,
-                        artist: data.item.artists.map((a:any) => a.name).join(', '),
-                        albumArt: data.item.album.images[0]?.url,
-                        uri: data.item.uri
+                        artist: artistName,
+                        albumArt: albumArt,
+                        uri: data.item.uri,
+                        type: data.item.type || 'unknown'
                     });
                     setPaused(!data.is_playing);
                 }
