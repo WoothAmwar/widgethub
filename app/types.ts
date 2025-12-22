@@ -24,4 +24,5 @@ export interface AppState {
     };
     blur?: number; // 0-100
     isEditing: boolean;
+    maxWidgetsPerColumn?: number;
 }

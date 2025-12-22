@@ -11,6 +11,8 @@ import { WidgetWrapper } from './components/WidgetWrapper';
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
+// const MAX_WIDGETS_PER_COLUMN = 4; // Maximum widgets allowed per column
+
 const INITIAL_STATE: AppState = {
   columns: {
     left: [],
@@ -28,12 +30,13 @@ const INITIAL_STATE: AppState = {
     colorValue: '#1a1a1a', // Default dark bg
   },
   isEditing: false,
+  maxWidgetsPerColumn: 3,
 };
 
 export default function Home() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [state, setState] = useState<AppState>(INITIAL_STATE);
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false); 
 
   useEffect(() => {
     setMounted(true);
@@ -96,8 +99,10 @@ export default function Home() {
       return;
     }
 
+ 
     // Check limits before moving
-    if (state.columns[overContainer].length >= 3) {
+    const limit = state.maxWidgetsPerColumn || 3;
+    if (state.columns[overContainer].length >= limit) {
       // Allow if we are swapping? For now simple restrict
       // Actually DragOver is for temporary visual, we should allow it to "float" potentially
       // But let's restrict the drop.
@@ -151,12 +156,12 @@ export default function Home() {
       (activeContainer !== overContainer || (over && active.id !== over.id))
     ) {
        // Check constraints again for final drop
-       if (activeContainer !== overContainer && state.columns[overContainer].length > 3) {
-           // Revert? (Complex to revert here without prev state ref, mostly rely on logic preventing the move)
-           // If we already moved in dragOver, we might have 4 items. We need to trim or prevent.
-           // Ideally we prevent in DragOver. A better way is:
-           // If destination has >= 3, don't allow move.
-       }
+      //  if (activeContainer !== overContainer && state.columns[overContainer].length > 3) {
+      //      // Revert? (Complex to revert here without prev state ref, mostly rely on logic preventing the move)
+      //      // If we already moved in dragOver, we might have 4 items. We need to trim or prevent.
+      //      // Ideally we prevent in DragOver. A better way is:
+      //      // If destination has >= 3, don't allow move.
+      //  }
 
       const activeIndex = state.columns[activeContainer].findIndex((w) => w.id === active.id);
       const overIndex = state.columns[overContainer].findIndex((w) => w.id === over?.id);
@@ -183,11 +188,13 @@ export default function Home() {
   // Constraint check helper for DragOver
   // (Simplified: we let dnd-kit handle the visuals, but we could add custom collision detection)
 
+
   const addWidget = (type: WidgetType) => {
     // Find column with space
-    const targetCol = (['left', 'middle', 'right'] as ColumnId[]).find(id => state.columns[id].length < 3);
+    const limit = state.maxWidgetsPerColumn || 3;
+    const targetCol = (['left', 'middle', 'right'] as ColumnId[]).find(id => state.columns[id].length < limit);
     if (!targetCol) {
-        alert('All columns are full (max 3 per column). Remove a widget first.');
+        alert(`All columns are full (max ${limit} per column). Remove a widget first.`);
         return;
     }
 
@@ -271,6 +278,10 @@ export default function Home() {
       setState(prev => ({ ...prev, blur: value }));
   };
 
+  const updateMaxWidgets = (value: number) => {
+      setState(prev => ({ ...prev, maxWidgetsPerColumn: value }));
+  };
+
   const updateColumnWidth = (id: ColumnId, width: number) => {
       setState(prev => {
           // Validation: check sum <= 100 ?
@@ -347,6 +358,20 @@ export default function Home() {
             backgroundColor: state.background.activeType === 'solid' ? state.background.colorValue : undefined
         }}
       >
+        {state.isEditing && (
+             <div className="absolute top-0 left-4 z-50 bg-black/50 backdrop-blur-md p-1 rounded-b border-x border-b border-white/10 flex items-center gap-2">
+                 <span className="text-white text-[10px] whitespace-nowrap">Max/Col:</span>
+                 <input 
+                    type="number" 
+                    min={1} 
+                    max={10} 
+                    value={state.maxWidgetsPerColumn || 3} 
+                    onChange={(e) => updateMaxWidgets(parseInt(e.target.value) || 3)}
+                    className="w-10 bg-white/10 border border-white/20 rounded px-1 text-white text-xs"
+                 />
+             </div>
+        )}
+
         {!mounted ? null : (
             <>
                 <Column 
