@@ -21,6 +21,7 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
     // State
     const [showCustomInput, setShowCustomInput] = useState(false);
     const [customAmount, setCustomAmount] = useState('');
+    const [lastCustomAmount, setLastCustomAmount] = useState('');
     const [goalInput, setGoalInput] = useState(settings?.goal?.toString() || '2000');
     
     // Settings
@@ -32,22 +33,6 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
     // determine actual layout mode based on preference
     const layoutMode = layoutPreference === 'auto' ? measuredMode : (
         layoutPreference === 'horizontal' ? 'horizontal' : 'vertical' 
-        // Note: 'vertical' preference forces vertical stack. 
-        // If we want side-by-side support in manual, we'd need more options or logic. 
-        // For now, let's map 'vertical' preference to standard vertical behavior (which might include side logic if we kept it separate from measured).
-        // Actually, if user forces 'Vertical', they probably want the Cup.
-        // If I force 'vertical', I should arguably still check width/height for side-by-side variant if I want to be smart, 
-        // but user asked for "Horizontal or Vertical".
-        // Let's simplified: 
-        // Preference 'vertical' -> Forces the vertical cup view.
-        // Preference 'horizontal' -> Forces the horizontal bar view.
-        // The 'side' mode is a variation of vertical cup. We can let 'vertical' preference allow 'side' if space is tight? 
-        // No, let's strictly toggle. If 'vertical' is chosen, we show vertical cup. 
-        // But if height is small, vertical cup clips. 
-        // User said "toggle... vertical or horizontal".
-        // Let's assume 'vertical' preference maps to 'measuredMode' logic but locking out 'horizontal', 
-        // OR just forces the view.
-        // Let's implementation: Preference overrides measured classification.
     );
 
     // Resize Observer for Layout
@@ -111,6 +96,21 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
         setCustomAmount('');
     };
 
+    const submitCustomAmount = () => {
+        const val = parseInt(customAmount);
+        if (!isNaN(val) && val > 0) {
+            setLastCustomAmount(customAmount);
+            addWater(val);
+        }
+    };
+
+    const handleCustomClick = () => {
+        if (lastCustomAmount) {
+            setCustomAmount(lastCustomAmount);
+        }
+        setShowCustomInput(true);
+    };
+
     const handleGoalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setGoalInput(e.target.value);
     };
@@ -160,7 +160,7 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
             </button>
 
             <button 
-                onClick={() => setShowCustomInput(true)}
+                onClick={handleCustomClick}
                 className={`flex flex-col items-center justify-center bg-cyan-500/10 hover:bg-cyan-500/30 border border-cyan-500/20 hover:border-cyan-500/50 rounded-xl group transition-all
                    ${layoutMode === 'horizontal' ? 'w-8 h-8' : (layoutMode === 'side' ? 'w-10 h-10' : 'w-12 h-12')}
                 `}
@@ -233,12 +233,12 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
                                 value={customAmount}
                                 onChange={(e) => setCustomAmount(e.target.value)}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter') addWater(parseInt(customAmount) || 0);
+                                    if (e.key === 'Enter') submitCustomAmount();
                                     if (e.key === 'Escape') setShowCustomInput(false);
                                 }}
                             />
                             <button 
-                                onClick={() => addWater(parseInt(customAmount) || 0)}
+                                onClick={submitCustomAmount}
                                 className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-500"
                             >
                                 <Plus size={20} />
@@ -298,7 +298,7 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
                              return (
                                 <div 
                                     key={idx}
-                                    className={`absolute text-[7px] text-white/70 whitespace-nowrap transform -translate-x-1/2 flex flex-col items-center ${isTop ? '-top-4' : '-bottom-4'}`}
+                                    className={`absolute text-[9px] text-white/70 whitespace-nowrap transform -translate-x-1/2 flex flex-col items-center ${isTop ? '-top-4' : '-bottom-4'}`}
                                     style={{ left: `${pct}%` }}
                                 >
                                     <span>{entry.timeDisplay}</span>
@@ -345,7 +345,7 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
                             })}
                         </div>
                         
-                        {/* Labels for Vertical/Side Cup - FONT SIZE CHANGE HERE */}
+                        {/* Labels for Vertical/Side Cup */}
                         {history.map((entry, idx) => {
                              const cumulative = history.slice(0, idx + 1).reduce((acc, curr) => acc + curr.amount, 0);
                              if (cumulative <= 0) return null;
@@ -357,7 +357,7 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
                              return (
                                 <div 
                                     key={idx}
-                                    className={`absolute text-[9px] text-white/60 whitespace-nowrap transition-all duration-500`}
+                                    className={`absolute text-[7px] text-white/60 whitespace-nowrap transition-all duration-500`}
                                     style={{ 
                                         bottom: `${pct}%`, 
                                         [isLeft ? 'right' : 'left']: '50%',
