@@ -10,6 +10,7 @@ import YoutubeWidget from './widgets/YoutubeWidget';
 import PomodoroWidget from './widgets/PomodoroWidget';
 import WeatherWidget from './widgets/WeatherWidget';
 import SpotifyWidget from './widgets/SpotifyWidget';
+import WaterLogWidget from './widgets/WaterLogWidget';
 import SpacerWidget from './widgets/SpacerWidget';
 
 interface WidgetWrapperProps {
@@ -91,6 +92,7 @@ export function WidgetWrapper({
       case 'weather': return <WeatherWidget {...widgetProps} />;
       case 'spotify': return <SpotifyWidget {...widgetProps} />;
       case 'spotify_hidden': return <SpotifyWidget {...widgetProps} isHidden={true} />;
+      case 'waterlog': return <WaterLogWidget {...widgetProps} />;
       case 'spacer': return <SpacerWidget isEditing={isEditing} />;
       default: return null;
     }

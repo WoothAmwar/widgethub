@@ -99,6 +99,7 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
                 <button onClick={() => onAddWidget('weather')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Weather</button>
                 <button onClick={() => onAddWidget('spotify')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Spotify</button>
                 <button onClick={() => onAddWidget('spotify_hidden')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Spotify Minimal</button>
+                <button onClick={() => onAddWidget('waterlog')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">WaterLog</button>
                 <button onClick={() => onAddWidget('spacer')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Spacer</button>
              </div>
 
