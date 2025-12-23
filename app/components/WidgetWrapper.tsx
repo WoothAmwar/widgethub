@@ -5,6 +5,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Widget } from '../types';
 import { GripVertical, X, Settings } from 'lucide-react';
 import TimeWidget from './widgets/TimeWidget';
+import DateWidget from './widgets/DateWidget';
 import TodoWidget from './widgets/TodoWidget';
 import YoutubeWidget from './widgets/YoutubeWidget';
 import PomodoroWidget from './widgets/PomodoroWidget';
@@ -86,6 +87,7 @@ export function WidgetWrapper({
   const renderContent = () => {
     switch (widget.type) {
       case 'time': return <TimeWidget {...widgetProps} />;
+      case 'date': return <DateWidget {...widgetProps} />;
       case 'todo': return <TodoWidget {...widgetProps} />;
       case 'youtube': return <YoutubeWidget {...widgetProps} />;
       case 'pomodoro': return <PomodoroWidget {...widgetProps} />;

@@ -359,7 +359,7 @@ export default function Home() {
         }}
       >
         {state.isEditing && (
-             <div className="absolute top-0 left-4 z-50 bg-black/50 backdrop-blur-md p-1 rounded-b border-x border-b border-white/10 flex items-center gap-2">
+             <div className="absolute top-0 left-1 z-50 bg-black/50 backdrop-blur-md p-1 rounded-b border-x border-b border-white/10 flex items-center gap-2">
                  <span className="text-white text-[10px] whitespace-nowrap">Max/Col:</span>
                  <input 
                     type="number" 

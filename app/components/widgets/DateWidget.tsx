@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
-interface TimeWidgetProps {
+interface DateWidgetProps {
     blur?: number;
 }
 
-export default function TimeWidget({ blur = 0 }: TimeWidgetProps) {
-  const [time, setTime] = useState(new Date());
+export default function DateWidget({ blur = 0 }: DateWidgetProps) {
+  const [date, setDate] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
+    const timer = setInterval(() => setDate(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -22,8 +22,8 @@ export default function TimeWidget({ blur = 0 }: TimeWidgetProps) {
             backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
         }}
     >
-      <div className="text-7xl font-bold tracking-tight">
-        {time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: false })}
+      <div className="text-md text-white-100 font-medium">
+        {date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
       </div>
     </div>
   );

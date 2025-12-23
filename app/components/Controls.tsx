@@ -93,6 +93,7 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
              {/* Add Widgets */}
              <div className="bg-black/80 backdrop-blur-md p-2 rounded-xl flex gap-2 border border-white/10">
                 <button onClick={() => onAddWidget('time')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Time</button>
+                <button onClick={() => onAddWidget('date')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Date</button>
                 <button onClick={() => onAddWidget('todo')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Todo</button>
                 <button onClick={() => onAddWidget('youtube')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">YouTube</button>
                 <button onClick={() => onAddWidget('pomodoro')} className="text-xs text-white bg-white/10 p-2 rounded hover:bg-white/20">Pomodoro</button>

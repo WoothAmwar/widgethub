@@ -60,7 +60,7 @@ export function Column({ id, widgets, isEditing, blur, width, onRemoveWidget, on
     >
       {/* Height & Width Controls in Edit Mode */}
       {isEditing && (
-        <div className="absolute top-0 left-0 right-0 p-2 flex flex-col items-center z-30 bg-black/50 backdrop-blur-sm rounded-t-lg">
+        <div className="absolute top-0 left-0 right-0 p-1 pt-6 flex flex-col items-center z-30 bg-black/50 backdrop-blur-sm rounded-t-lg">
            
            {/* Column Width Input */}
            <div className="flex items-center gap-1 mb-2">
