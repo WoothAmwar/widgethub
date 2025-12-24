@@ -144,10 +144,10 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
   return (
     <div 
         ref={containerRef}
-        className="flex flex-col h-full w-full rounded-2xl p-4 text-white shadow-lg overflow-hidden relative transition-colors duration-300"
+        className="flex flex-col h-full w-full rounded-2xl p-4 text-white  overflow-hidden relative transition-colors duration-300"
         style={{ 
             backdropFilter: `blur(${blur}px)`,
-            backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
+            backgroundColor: `rgba(0, 0, 0, 0)`
         }}
     >
         {isEditingCity ? (

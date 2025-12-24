@@ -452,7 +452,7 @@ export default function SpotifyWidget({ blur = 0, isEditing = false, isHidden = 
                             <img 
                                 src={currentTrack.albumArt} 
                                 alt="Album Art" 
-                                className={`w-16 h-16 rounded-lg shadow-lg ${!paused ? 'animate-pulse-subtle' : ''}`} 
+                                className={`w-16 h-16 rounded-lg  ${!paused ? 'animate-pulse-subtle' : ''}`} 
                             />
                             <div className="flex-1 min-w-0 flex flex-col justify-center h-16">
                                 <h3 className="font-bold text-white truncate text-base leading-tight">
@@ -500,10 +500,10 @@ export default function SpotifyWidget({ blur = 0, isEditing = false, isHidden = 
 
     return (
         <div 
-            className="flex flex-col w-full h-full rounded-2xl text-white shadow-lg overflow-hidden relative transition-colors duration-300"
+            className="flex flex-col w-full h-full rounded-2xl text-white  overflow-hidden relative transition-colors duration-300"
             style={{ 
                 backdropFilter: `blur(${blur}px)`,
-                backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
+                backgroundColor: `rgba(0, 0, 0, 0)`
             }}
         >
             {renderContent()}

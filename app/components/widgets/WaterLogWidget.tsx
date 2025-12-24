@@ -14,7 +14,7 @@ interface WaterLogWidgetProps {
     isEditing: boolean;
 }
 
-export default function WaterLogWidget({ settings, onSettingsChange, blur, isEditing }: WaterLogWidgetProps) {
+export default function WaterLogWidget({ settings, onSettingsChange, isEditing, blur=0 }: WaterLogWidgetProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [measuredMode, setMeasuredMode] = useState<'vertical' | 'side' | 'horizontal'>('vertical');
     
@@ -180,7 +180,7 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
 
     const GoalDisplay = () => (
         <div className={`flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full z-[30] border border-white/5
-            ${layoutMode === 'horizontal' ? 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-lg' : ''}
+            ${layoutMode === 'horizontal' ? 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ' : ''}
             ${layoutMode === 'vertical' ? 'mb-2' : ''}
         `}>
             <span className="text-blue-400 font-bold text-xs">{current}</span>
@@ -204,7 +204,7 @@ export default function WaterLogWidget({ settings, onSettingsChange, blur, isEdi
     );
 
     return (
-        <div ref={containerRef} className="w-full h-full p-2 relative overflow-hidden flex" style={{ backdropFilter: `blur(${blur || 0}px)` }}>
+        <div ref={containerRef} className="w-full h-full p-2 relative overflow-hidden flex rounded-2xl" style={{ backdropFilter: `blur(${blur}px)`, backgroundColor: `rgba(0, 0, 0, 0)` }}>
             
             {/* Editing Controls - Layout Toggle */}
             {isEditing && (

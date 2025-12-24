@@ -61,10 +61,10 @@ export default function TodoWidget({ blur = 0, settings, onSettingsChange }: Tod
 
   return (
     <div 
-        className="flex flex-col h-full w-full rounded-2xl p-4 text-white shadow-lg overflow-hidden transition-colors duration-300"
+        className="flex flex-col h-full w-full rounded-2xl p-4 text-white  overflow-hidden transition-colors duration-300"
         style={{ 
             backdropFilter: `blur(${blur}px)`,
-            backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
+            backgroundColor: `rgba(0, 0, 0, 0)`
         }}
     >
       <h3 className="font-bold mb-3 text-lg">To-Do</h3>
@@ -92,24 +92,17 @@ export default function TodoWidget({ blur = 0, settings, onSettingsChange }: Tod
 
       <form 
         onSubmit={addTodo} 
-        className="flex gap-2 isolate origin-bottom-left"
-        style={{
-            // Inverse scaling to keep input bar standard size
-            // We scale by 1/factor to counteract parent scale
-            // We multiply width by factor to fill the visual space
-            transform: settings?.fontSizeFactor ? `scale(${1 / settings.fontSizeFactor})` : undefined,
-            width: settings?.fontSizeFactor ? `calc(100% * ${settings.fontSizeFactor})` : '100%',
-        }}
-        onPointerDown={e => e.stopPropagation()} // Prevent drag start from input area if needed
+        className="flex gap-2 isolate origin-bottom-left w-full"
+        onPointerDown={e => e.stopPropagation()}
       >
         <input 
           type="text" 
           value={input} 
           onChange={(e) => setInput(e.target.value)}
           placeholder="New task..."
-          className="flex-1 bg-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:bg-white/20 transition placeholder-white/30"
+          className="flex-1 min-w-0 bg-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:bg-white/20 transition placeholder-white/30"
         />
-        <button type="submit" className="bg-white/10 rounded px-3 py-2 hover:bg-white/20 transition">
+        <button type="submit" className="flex-shrink-0 bg-white/10 rounded px-2 py-1 hover:bg-white/20 transition">
           <Plus size={16} />
         </button>
       </form>

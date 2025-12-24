@@ -16,14 +16,14 @@ export default function TimeWidget({ blur = 0 }: TimeWidgetProps) {
 
   return (
     <div 
-        className="flex flex-col items-center justify-center h-full w-full rounded-2xl text-white shadow-lg transition-colors duration-300"
+        className="flex flex-col items-center justify-center h-full w-full rounded-2xl text-white transition-colors duration-300"
         style={{ 
             backdropFilter: `blur(${blur}px)`,
-            backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
+            backgroundColor: `rgba(0, 0, 0, 0)`
         }}
     >
       <div className="text-7xl font-bold tracking-tight">
-        {time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: false })}
+        {time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?(AM|PM)/i, '')}
       </div>
     </div>
   );

@@ -59,10 +59,10 @@ export default function YoutubeWidget({ blur = 0, isEditing = false, settings, o
 
   return (
     <div 
-        className={`flex flex-col w-full rounded-2xl text-white shadow-lg overflow-hidden relative group transition-all duration-300 ${isCollapsed ? 'h-12' : 'h-full'}`}
+        className={`flex flex-col w-full rounded-2xl text-white  overflow-hidden relative group transition-all duration-300 ${isCollapsed ? 'h-12' : 'h-full'}`}
         style={{ 
             backdropFilter: `blur(${blur}px)`,
-            backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
+            backgroundColor: `rgba(0, 0, 0, 0)`
         }}
     >
       {/* Collapse Toggle - Only in View Mode */}

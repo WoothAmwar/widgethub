@@ -83,10 +83,10 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
 
   return (
     <div 
-        className="flex flex-col items-center justify-center h-full w-full rounded-2xl p-4 text-white shadow-lg relative overflow-hidden transition-colors duration-300"
+        className="flex flex-col items-center justify-center h-full w-full rounded-2xl p-4 text-white  relative overflow-hidden transition-colors duration-300"
         style={{ 
             backdropFilter: `blur(${blur}px)`,
-            backgroundColor: `rgba(0, 0, 0, ${(blur / 40) * 0.7})`
+            backgroundColor: `rgba(0, 0, 0, 0)`
         }}
     >
       {/* Animedoro Toggle */}
@@ -122,7 +122,7 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
       <div className="flex items-center gap-4">
           <button 
             onClick={toggleTimer}
-            className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition shadow-lg backdrop-blur-sm"
+            className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition  backdrop-blur-sm"
           >
               {isActive ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
           </button>
