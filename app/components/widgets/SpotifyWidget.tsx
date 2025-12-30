@@ -438,12 +438,10 @@ export default function SpotifyWidget({ blur = 0, isEditing = false, isHidden = 
         return (
             <div className="flex flex-col h-full w-full relative group">
                 {/* Background Image Blur */}
-                {!isHidden ? (
-                    <div 
-                        className="absolute inset-0 bg-cover bg-center opacity-30 scale-110 pointer-events-none transition-all duration-700" 
-                        style={{ backgroundImage: `url(${currentTrack.albumArt})` }} 
-                    />
-                ) : null}
+                <div 
+                    className="absolute inset-0 bg-cover bg-center opacity-30 scale-110 pointer-events-none transition-all duration-700" 
+                    style={{ backgroundImage: `url(${currentTrack.albumArt})` }} 
+                />
                 
                 {/* Content */}
                 <div className="relative z-10 flex flex-col h-full p-4">

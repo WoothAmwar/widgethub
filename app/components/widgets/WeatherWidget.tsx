@@ -138,8 +138,9 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
   // Also consider width
   const isSmallWidth = size.width < 140;
 
-  const showIcon = !isSmallHeight && !isSmallWidth;
+  const showIcon = !isVerySmallHeight && !isSmallWidth;
   const isInline = isVerySmallHeight;
+  const isKindaSmall = isSmallHeight || isSmallWidth;
 
   return (
     <div 
@@ -193,7 +194,7 @@ export default function WeatherWidget({ blur = 0, settings, onSettingsChange }: 
                     </div>
 
                     {/* Footer / Condition (Hide if inline/very small) */}
-                    {!isInline && (
+                    {!isKindaSmall && (
                         <div className="text-white/70 font-medium text-s">
                             {weather.condition}
                         </div>

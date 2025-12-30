@@ -78,9 +78,10 @@ export default function YoutubeWidget({ blur = 0, isEditing = false, settings, o
       {/* Collapsed View */}
       {isCollapsed && (
           <div className="flex items-center px-4 h-full">
-              <span className="font-bold text-sm truncate">
+            {/* Shows the text "YouTube Widget" to the left */}
+              {/* <span className="font-bold text-sm truncate">
                   {embedId ? `YouTube Video` : 'YouTube Widget'}
-              </span>
+              </span> */}
               {embedId && <span className="ml-2 text-xs text-white/50 truncate max-w-[200px]">ID: {embedId}</span>}
           </div>
       )}

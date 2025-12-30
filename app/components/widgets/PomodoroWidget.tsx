@@ -96,7 +96,7 @@ export default function PomodoroWidget({ blur = 0 }: PomodoroWidgetProps) {
             className={`text-[10px] px-2 py-1 rounded-full border transition ${isAnimedoro ? 'bg-pink-500/20 border-pink-500 text-pink-200' : 'bg-white/10 border-white/20 text-white/50'}`}
             title="Toggle Animedoro (40m/20m)"
           >
-              {isAnimedoro ? 'ANIME' : 'POMO'}
+              {isAnimedoro ? 'LONG' : 'SHORT'}
           </button>
       </div>
 
