@@ -7,6 +7,7 @@ import { Widget, ColumnId, AppState, WidgetType } from './types';
 import { Column } from './components/Column';
 import { Controls } from './components/Controls';
 import { WidgetWrapper } from './components/WidgetWrapper';
+import { GuideModal } from './components/GuideModal';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -16,7 +17,10 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 const INITIAL_STATE: AppState = {
   columns: {
     left: [],
-    middle: [],
+    middle: [
+        { id: 'time-widget-default', type: 'time', customHeight: 50 },
+        { id: 'date-widget-default', type: 'date', customHeight: 50 }
+    ],
     right: [],
   },
   columnWidths: {
@@ -352,12 +356,14 @@ export default function Home() {
       onDragEnd={handleDragEnd}
     >
       <main 
-        className="h-screen w-full flex overflow-hidden transition-all duration-500 bg-cover bg-center"
+        className="h-screen w-full flex overflow-hidden transition-all duration-500 bg-cover bg-center relative"
         style={{ 
             backgroundImage: state.background.activeType === 'image' && state.background.imageValue ? `url(${state.background.imageValue})` : undefined,
             backgroundColor: state.background.activeType === 'solid' ? state.background.colorValue : undefined
         }}
       >
+        {Object.values(state.columns).every(col => col.length === 0) && !state.isEditing && <GuideModal />}
+
         {state.isEditing && (
              <div className="absolute top-0 left-1 z-50 bg-black/50 backdrop-blur-md p-1 rounded-b border-x border-b border-white/10 flex items-center gap-2">
                  <span className="text-white text-[10px] whitespace-nowrap">Max/Col:</span>
