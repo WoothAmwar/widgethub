@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Check, Download, Upload, Plus, Image as ImageIcon, Maximize, Minimize } from 'lucide-react';
+import { Edit2, Check, Download, Upload, Plus, Image as ImageIcon, Maximize, Minimize, Zap, ZapOff, CircleEllipsis } from 'lucide-react';
 import { WidgetType, AppState } from '../types';
 
 interface ControlsProps {
@@ -13,9 +13,11 @@ interface ControlsProps {
   blur: number;
   onUpdateBackground: (updates: Partial<AppState['background']>) => void;
   background: AppState['background'];
+  wakeLock?: boolean;
+  onToggleWakeLock: () => void;
 }
 
-export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, onExport, onImport, onUpdateBlur, blur, onUpdateBackground, background }: ControlsProps) {
+export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, onExport, onImport, onUpdateBlur, blur, onUpdateBackground, background, wakeLock = false, onToggleWakeLock }: ControlsProps) {
   const [showBgModal, setShowBgModal] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showControls, setShowControls] = useState(false);
@@ -74,42 +76,36 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
         </div>
       )}
 
-      <div className="fixed bottom-6 right-6 flex items-center gap-3 z-50">
-        {!showControls && (
-          <button onClick={() => setShowControls(true)} className="p-4 rounded-full shadow-lg transition-all transform hover:scale-105 bg-white/10 hover:bg-white/20 backdrop-blur-md">
-            <Edit2 className="text-blue" size={20} />
-          </button>
-        )}
-        
+      <div className="fixed bottom-6 right-10 flex items-center gap-2 z-50">
         {isEditing && (
-          <div className="bottom-6 mr-28 flex gap-2 items-center animate-in slide-in-from-right-5 fade-in duration-300">
-             
-             {/* Settings */}
-             <div className="bg-black/80 backdrop-blur-md p-2 rounded-xl flex gap-2 border border-white/10">
+          <div className="flex gap-2 items-center animate-in slide-in-from-right-5 fade-in duration-300">
+            
+            {/* Settings */}
+            <div className="bg-black/80 backdrop-blur-md p-2 rounded-xl flex gap-2 border border-white/10">
                 <button onClick={() => setShowBgModal(true)} className="p-2 rounded-full hover:bg-white/10 text-white" title="Change Background">
-                   <ImageIcon size={20} />
+                  <ImageIcon size={20} />
                 </button>
                 <label className="cursor-pointer p-2 rounded-full hover:bg-white/10 text-white" title="Import Config">
-                   <Upload size={20} />
-                   <input type="file" onChange={onImport} className="hidden" accept=".json" />
+                  <Upload size={20} />
+                  <input type="file" onChange={onImport} className="hidden" accept=".json" />
                 </label>
                 <button onClick={onExport} className="p-2 rounded-full hover:bg-white/10 text-white" title="Export Config">
-                   <Download size={20} />
+                  <Download size={20} />
                 </button>
-             </div>
+            </div>
           
-             {/* Add Widgets */}
-             <div className="relative">
+            {/* Add Widgets */}
+            <div className="relative">
                 <button 
                   onClick={() => setShowAddMenu(!showAddMenu)} 
                   className={`bg-black/80 backdrop-blur-md p-3 rounded-full hover:bg-white/10 text-white border border-white/10 transition-transform ${showAddMenu ? 'rotate-45' : ''}`}
                   title="Add Widget"
                 >
-                   <Plus size={20} />
+                  <Plus size={20} />
                 </button>
                 
                 {showAddMenu && (
-                   <div className="absolute bottom-full right-0 mb-4 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl grid grid-cols-2 shadow-2xl overflow-hidden w-64 animate-in slide-in-from-bottom-2 fade-in">
+                  <div className="absolute bottom-full right-0 mb-4 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl grid grid-cols-2 shadow-2xl overflow-hidden w-64 animate-in slide-in-from-bottom-2 fade-in">
                         <div className="p-3 border-b border-white/10 col-span-2 text-center text-xs text-zinc-400 uppercase font-bold">Add Widget</div>
                         <button onClick={() => { onAddWidget('time'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-r border-b border-white/5">Time</button>
                         <button onClick={() => { onAddWidget('date'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-b border-white/5">Date</button>
@@ -121,36 +117,57 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
                         <button onClick={() => { onAddWidget('spotify_hidden'); setShowAddMenu(false); }} className="py-2 px-2 text-sm text-white hover:bg-white/10 transition border-b border-white/5 text-center leading-tight">Spotify<br/><span className="text-[10px] text-zinc-400">Minimal</span></button>
                         <button onClick={() => { onAddWidget('waterlog'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-r border-white/5">WaterLog</button>
                         <button onClick={() => { onAddWidget('spacer'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition">Spacer</button>
-                   </div>
+                  </div>
                 )}
-             </div>
+            </div>
 
           </div>
         )}
-        {showControls && (
-          <div className="fixed bottom-6 right-6 flex items-center gap-1 z-50">
-            <button
-              onClick={onToggleEdit}
-              disabled={disableEdit}
-              className={`p-4 rounded-full shadow-lg transition-all transform hover:scale-105 ${disableEdit ? 'bg-gray-500 cursor-not-allowed opacity-50' : isEditing ? 'bg-green-500 hover:bg-green-600' : 'bg-white/10 hover:bg-white/20 backdrop-blur-md'}`}
-            >
-              {isEditing ? <Check className="text-white" size={16} /> : <Edit2 className="text-white" size={16} />}
-            </button>
 
-            <button
-              onClick={() => {
-                if (!document.fullscreenElement) {
-                  document.documentElement.requestFullscreen();
-                } else {
-                  document.exitFullscreen();
-                }
-              }}
-              className="p-4 rounded-full shadow-lg transition-all transform hover:scale-105 bg-white/10 hover:bg-white/20 backdrop-blur-md"
-            >
-              {isFullscreen ? <Minimize className="text-white" size={16} /> : <Maximize className="text-white" size={16} />}
+        <div className="flex items-center gap-1 z-50">
+          {showControls && (
+            <div className="flex items-center gap-1 animate-in slide-in-from-right-2 fade-in duration-200">
+              <button
+                onClick={onToggleEdit}
+                disabled={disableEdit}
+                className={`p-4 rounded-full shadow-lg transition-all transform hover:scale-105 ${disableEdit ? 'bg-gray-500 cursor-not-allowed opacity-50' : isEditing ? 'bg-green-500 hover:bg-green-600' : 'bg-white/10 hover:bg-white/20 backdrop-blur-md'}`}
+              >
+                {isEditing ? <Check className="text-white" size={16} /> : <Edit2 className="text-white" size={16} />}
+              </button>
+
+              <button
+                onClick={onToggleWakeLock}
+                className={`p-4 rounded-full shadow-lg transition-all transform hover:scale-105 ${wakeLock ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-white/10 hover:bg-white/20 backdrop-blur-md'}`}
+                title={wakeLock ? "Keep Screen Awake (On)" : "Keep Screen Awake (Off)"}
+              >
+                {wakeLock ? <Zap className="text-black fill-black" size={16} /> : <ZapOff className="text-white" size={16} />}
+              </button>
+
+              <button
+                onClick={() => {
+                  if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                  } else {
+                    document.exitFullscreen();
+                  }
+                }}
+                className="p-4 rounded-full shadow-lg transition-all transform hover:scale-105 bg-white/10 hover:bg-white/20 backdrop-blur-md"
+              >
+                {isFullscreen ? <Minimize className="text-white" size={16} /> : <Maximize className="text-white" size={16} />}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="fixed bottom-2 right-2 z-50">
+        <div>
+          {(
+            <button onClick={() => setShowControls(!showControls)} className="p-2 rounded-full shadow-sm transition-all transform hover:scale-105 bg-white/10 hover:bg-white/20 backdrop-blur-md">
+              <CircleEllipsis className="text-white" size={16} />
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Background Modal */}

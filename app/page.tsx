@@ -35,6 +35,7 @@ const INITIAL_STATE: AppState = {
   },
   isEditing: false,
   maxWidgetsPerColumn: 3,
+  wakeLock: true,
 };
 
 export default function Home() {
@@ -53,6 +54,7 @@ export default function Home() {
              ...INITIAL_STATE,
              ...loadedState,
              columnWidths: loadedState.columnWidths || INITIAL_STATE.columnWidths,
+             wakeLock: loadedState.wakeLock !== undefined ? loadedState.wakeLock : INITIAL_STATE.wakeLock,
              background: {
                  ...INITIAL_STATE.background,
                  ...loadedState.background
@@ -69,6 +71,44 @@ export default function Home() {
       localStorage.setItem('widgethub-config', JSON.stringify(state));
     }
   }, [state, mounted]);
+
+  useEffect(() => {
+    let wakeLockSentinel: any = null;
+
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator && state.wakeLock) {
+          wakeLockSentinel = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.error('Wake Lock ERROR:', err);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && state.wakeLock) {
+        requestWakeLock();
+      }
+    };
+
+    if (state.wakeLock) {
+      requestWakeLock();
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    } else {
+      if (wakeLockSentinel) {
+        wakeLockSentinel.release();
+        wakeLockSentinel = null;
+      }
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLockSentinel) {
+        wakeLockSentinel.release().catch(console.error);
+        wakeLockSentinel = null;
+      }
+    };
+  }, [state.wakeLock]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -286,6 +326,10 @@ export default function Home() {
       setState(prev => ({ ...prev, maxWidgetsPerColumn: value }));
   };
 
+  const toggleWakeLock = () => {
+      setState(prev => ({ ...prev, wakeLock: !prev.wakeLock }));
+  };
+
   const updateColumnWidth = (id: ColumnId, width: number) => {
       setState(prev => {
           // Validation: check sum <= 100 ?
@@ -446,6 +490,8 @@ export default function Home() {
             background={state.background}
             onUpdateBlur={updateBlur}
             blur={state.blur !== undefined ? state.blur : 10}
+            wakeLock={state.wakeLock}
+            onToggleWakeLock={toggleWakeLock}
         />
 
       </main>
