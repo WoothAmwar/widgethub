@@ -100,29 +100,6 @@ export function WidgetWrapper({
     }
   };
 
-  if (widget.type === 'spacer') {
-       return (
-            <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full relative group p-2">
-                 {renderContent()}
-                 {isEditing && (
-                  <div className="absolute top-2 right-2 flex flex-col items-end gap-2 z-20 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                    <div className="flex gap-2 p-2">
-                      <div {...listeners} className="p-1 bg-black/50 rounded-md cursor-grab active:cursor-grabbing text-white touch-none">
-                        <GripVertical size={16} />
-                      </div>
-                      <button 
-                        onClick={() => onRemove(widget.id)}
-                        className="p-1 bg-red-500 rounded-full text-white transition shadow-lg z-50"
-                        onPointerDown={e => e.stopPropagation()} 
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  </div>
-                 )}
-            </div>
-       )
-    }
 
   return (
     <div 
@@ -140,7 +117,7 @@ export function WidgetWrapper({
 
         {/* Edit Controls */}
         {isEditing && (
-          <div className="absolute top-2 right-2 flex flex-col items-end gap-2 z-20 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-2 right-2 flex flex-col items-end gap-2 z-20 opacity-100 transition-opacity">
              <div className="flex gap-2">
                 <div {...listeners} className="p-1 bg-black/50 rounded-md cursor-grab active:cursor-grabbing text-white touch-none">
                     <GripVertical size={16} />
