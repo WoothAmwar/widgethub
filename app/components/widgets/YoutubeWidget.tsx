@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import { getInverseColor } from '../../utils/colors';
 
 interface YoutubeWidgetProps {
   blur?: number;
@@ -10,9 +11,10 @@ interface YoutubeWidgetProps {
       embedId?: string;
   };
   onSettingsChange?: (settings: { embedId?: string }) => void;
+  fontColor?: string;
 }
 
-export default function YoutubeWidget({ blur = 0, isEditing = false, settings, onSettingsChange }: YoutubeWidgetProps) {
+export default function YoutubeWidget({ blur = 0, isEditing = false, settings, onSettingsChange, fontColor }: YoutubeWidgetProps) {
   const [url, setUrl] = useState('');
   const [embedId, setEmbedId] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -82,7 +84,7 @@ export default function YoutubeWidget({ blur = 0, isEditing = false, settings, o
               {/* <span className="font-bold text-sm truncate">
                   {embedId ? `YouTube Video` : 'YouTube Widget'}
               </span> */}
-              {embedId && <span className="ml-2 text-xs opacity-50 truncate max-w-[200px]">ID: {embedId}</span>}
+              {embedId && <span className="ml-2 text-xs truncate max-w-[200px]" style={{ color: fontColor || 'inherit', opacity: 0.5 }}>ID: {embedId}</span>}
           </div>
       )}
 
@@ -96,7 +98,11 @@ export default function YoutubeWidget({ blur = 0, isEditing = false, settings, o
                 placeholder="Paste YouTube or Custom Youtube URL" 
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full bg-white/10 rounded px-3 py-2 text-sm focus:outline-none"
+                className="w-full rounded px-3 py-2 text-sm focus:outline-none transition-colors"
+                style={{ 
+                    backgroundColor: fontColor ? getInverseColor(fontColor) : 'rgba(255, 255, 255, 0.1)', 
+                    color: fontColor || 'inherit'
+                }}
                 />
                 <button type="submit" className="border-[2px] border-red-600 bg-transparent text-red-600 hover:bg-red-600/10 px-3 py-2 rounded text-sm font-bold transition-colors">Load</button>
             </form>
