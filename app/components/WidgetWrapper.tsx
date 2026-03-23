@@ -13,6 +13,7 @@ import WeatherWidget from './widgets/WeatherWidget';
 import SpotifyWidget from './widgets/SpotifyWidget';
 import WaterLogWidget from './widgets/WaterLogWidget';
 import SpacerWidget from './widgets/SpacerWidget';
+import TelegramWidget from './widgets/TelegramWidget';
 
 interface WidgetWrapperProps {
     widget: Widget;
@@ -116,6 +117,7 @@ export function WidgetWrapper({
       case 'spotify_hidden': return <SpotifyWidget {...widgetProps} isHidden={true} />;
       case 'waterlog': return <WaterLogWidget {...widgetProps} />;
       case 'spacer': return <SpacerWidget isEditing={isEditing} />;
+      case 'telegram': return <TelegramWidget {...widgetProps} />;
       default: return null;
     }
   };
