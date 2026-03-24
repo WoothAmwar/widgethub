@@ -1,4 +1,4 @@
-export type WidgetType = 'time' | 'date' | 'todo' | 'youtube' | 'pomodoro' | 'weather' | 'spotify' | 'spotify_hidden' | 'waterlog' | 'spacer' | 'telegram';
+export type WidgetType = 'time' | 'date' | 'todo' | 'todoist' | 'youtube' | 'pomodoro' | 'weather' | 'spotify' | 'spotify_hidden' | 'waterlog' | 'spacer' | 'telegram';
 
 export interface Widget {
     id: string;

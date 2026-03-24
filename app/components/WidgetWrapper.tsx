@@ -7,6 +7,7 @@ import { GripVertical, X, Settings, Square, CheckSquare } from 'lucide-react';
 import TimeWidget from './widgets/TimeWidget';
 import DateWidget from './widgets/DateWidget';
 import TodoWidget from './widgets/TodoWidget';
+import TodoistWidget from './widgets/TodoistWidget';
 import YoutubeWidget from './widgets/YoutubeWidget';
 import PomodoroWidget from './widgets/PomodoroWidget';
 import WeatherWidget from './widgets/WeatherWidget';
@@ -110,6 +111,7 @@ export function WidgetWrapper({
       case 'time': return <TimeWidget {...widgetProps} />;
       case 'date': return <DateWidget {...widgetProps} />;
       case 'todo': return <TodoWidget {...widgetProps} />;
+      case 'todoist': return <TodoistWidget {...widgetProps} />;
       case 'youtube': return <YoutubeWidget {...widgetProps} />;
       case 'pomodoro': return <PomodoroWidget {...widgetProps} />;
       case 'weather': return <WeatherWidget {...widgetProps} />;
