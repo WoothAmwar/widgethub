@@ -1,195 +1,152 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, AlertCircle } from 'lucide-react';
-import { getInverseColor } from '../../utils/colors';
-
-interface Task {
-  id: string;
-  content: string;
-  description: string;
-  due: string | null;
-  priority: number;
-  order: number;
-}
-
-interface Category {
-  label: string;
-  sectionId: string;
-  taskCount: number;
-  tasks: Task[];
-}
+import { useEffect, useState } from 'react';
+import { RefreshCw, ListTodo } from 'lucide-react';
 
 interface TodoistWidgetProps {
   blur?: number;
+  isEditing?: boolean;
+  isHidden?: boolean;
   settings?: {
-    refreshInterval?: number; // minutes
-    [key: string]: any;
+    refreshInterval?: number;
+    apiToken?: string;
+    projectId?: string;
   };
-  onSettingsChange?: (settings: any) => void;
+  onSettingsChange?: (settings: { refreshInterval?: number; apiToken?: string; projectId?: string }) => void;
   fontColor?: string;
 }
 
-export default function TodoistWidget({ blur = 0, settings, onSettingsChange, fontColor }: TodoistWidgetProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
+export default function TodoistWidget({
+  blur = 0,
+  isEditing = false,
+  isHidden = false,
+  settings,
+  onSettingsChange,
+  fontColor,
+}: TodoistWidgetProps) {
+  const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const fetchTasks = useCallback(async (showRefreshing = false) => {
-    if (showRefreshing) setRefreshing(true);
-    else setLoading(true);
+  const refresh = async () => {
+    setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/todoist');
-      if (!res.ok) {
-        throw new Error(`Failed to fetch: ${res.status}`);
-      }
+      const params = new URLSearchParams();
+      if (settings?.apiToken) params.append('token', settings.apiToken);
+      if (settings?.projectId) params.append('projectId', settings.projectId);
+      params.append('t', Date.now().toString());
+      const res = await fetch(`/api/todoist?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
-      setCategories(data.categories || []);
-      setLastUpdated(data.lastUpdated);
-    } catch (err: any) {
-      setError(err.message || 'Unknown error');
+      setTasks(data);
+    } catch (e) {
+      setError('Unable to load tasks');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchTasks();
-    // Auto-refresh based on settings
-    const interval = (settings?.refreshInterval || 15) * 60 * 1000; // default 15 min
-    if (interval > 0) {
-      const id = setInterval(() => fetchTasks(), interval);
-      return () => clearInterval(id);
-    }
-  }, [fetchTasks, settings?.refreshInterval]);
-
-  const handleRefresh = () => {
-    fetchTasks(true);
   };
 
-  // Color utility
-  const inverseColor = fontColor ? getInverseColor(fontColor) : '#000000';
-  const bgLight = 'rgba(255,255,255,0.05)';
-  const borderColor = fontColor ? `${fontColor}33` : 'rgba(255,255,255,0.1)';
+  useEffect(() => {
+    refresh();
+    const interval = settings?.refreshInterval || 300000;
+    if (interval > 0) {
+      const id = setInterval(() => setRefreshKey((k) => k + 1), interval);
+      return () => clearInterval(id);
+    }
+  }, [refreshKey, settings?.refreshInterval, settings?.apiToken, settings?.projectId]);
+
+  if (isEditing) {
+    return (
+      <div className="flex flex-col h-full w-full p-4 space-y-3 overflow-y-auto">
+        <div className="flex items-center gap-2 mb-2">
+          <ListTodo className="w-6 h-6 text-blue-400" />
+          <span className="text-sm font-medium opacity-70">Todoist Widget</span>
+        </div>
+        <p className="text-sm opacity-60">
+          Displays tasks from your Todoist project by section.
+        </p>
+        <div className="space-y-2">
+          <label className="text-xs opacity-60 block">API Token</label>
+          <input
+            type="password"
+            value={settings?.apiToken || ''}
+            onChange={(e) => onSettingsChange?.({ ...(settings || {}), apiToken: e.target.value })}
+            placeholder="your-todoist-api-token"
+            className="w-full bg-white/10 rounded px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs opacity-60 block">Project ID</label>
+          <input
+            type="text"
+            value={settings?.projectId || ''}
+            onChange={(e) => onSettingsChange?.({ ...(settings || {}), projectId: e.target.value })}
+            placeholder="your-project-id"
+            className="w-full bg-white/10 rounded px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs opacity-60 block">Refresh interval (seconds)</label>
+          <input
+            type="number"
+            value={settings?.refreshInterval || 300}
+            onChange={(e) => onSettingsChange?.({ ...(settings || {}), refreshInterval: parseInt(e.target.value) || 300 })}
+            min="60"
+            className="w-full bg-white/10 rounded px-3 py-2 text-sm"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
-      className="flex flex-col h-full w-full rounded-2xl overflow-hidden transition-colors duration-300 relative"
-      style={{
-        backdropFilter: `blur(${blur}px)`,
-        backgroundColor: `rgba(0, 0, 0, 0)`,
-      }}
+      className="flex flex-col h-full w-full rounded-2xl overflow-hidden relative"
+      style={{ backdropFilter: `blur(${blur}px)` }}
     >
-      {/* Header */}
-      <div
-        className="flex items-center justify-between px-3 py-2 border-b"
-        style={{ borderColor, backgroundColor: bgLight }}
-      >
-        <span className="font-bold text-sm" style={{ color: fontColor }}>
-          Todoist
-        </span>
-        <div className="flex items-center gap-2">
-          {lastUpdated && (
-            <span className="text-[10px] opacity-50 hidden sm:inline-block">
-              {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing || loading}
-            className="p-1 rounded hover:bg-white/10 transition"
-            style={{ color: fontColor }}
-            title="Refresh"
-          >
-            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-          </button>
-        </div>
+      <div className="absolute top-2 right-2 z-10">
+        <button
+          onClick={refresh}
+          disabled={loading}
+          className="p-1 bg-black/50 rounded-full hover:bg-white/20 text-white/70"
+          title="Refresh"
+        >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+        </button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-3 custom-scrollbar">
-        {loading && categories.length === 0 ? (
-          <div className="flex items-center justify-center h-full opacity-50">
-            <RefreshCw className="animate-spin" size={24} />
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2 text-xs text-red-400">
-            <AlertCircle size={20} />
-            <span>{error}</span>
-            <button
-              onClick={handleRefresh}
-              className="underline"
-              style={{ color: fontColor }}
-            >
-              Retry
-            </button>
-          </div>
-        ) : categories.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-xs opacity-50">
-            No tasks
-          </div>
-        ) : (
-          categories.map((cat) => (
-            <div key={cat.sectionId} className="flex flex-col">
-              <div
-                className="flex items-center justify-between px-2 py-1 text-[11px] uppercase font-bold tracking-wide mb-1"
-                style={{ color: fontColor, opacity: 0.7 }}
-              >
-                <span>{cat.label}</span>
-                <span className="opacity-50">{cat.taskCount}</span>
-              </div>
-              {cat.tasks.length === 0 ? (
-                <div
-                  className="text-xs italic opacity-30 px-2 py-1"
-                  style={{ color: fontColor }}
-                >
-                  None
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {cat.tasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="group p-2 rounded-lg transition hover:bg-white/10"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
-                      title={task.description || task.content}
-                    >
-                      <div className="flex items-start gap-2">
-                        <div
-                          className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-                          style={{
-                            backgroundColor: cat.label === 'Done' ? '#22c55e' : cat.label === 'Waiting' ? '#f59e0b' : cat.label === 'Agent Queue' ? '#3b82f6' : fontColor || '#ffffff',
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className="text-sm break-words leading-relaxed"
-                            style={{
-                              color: cat.label === 'Done' ? 'rgba(255,255,255,0.5)' : fontColor,
-                              textDecoration: cat.label === 'Done' ? 'line-through' : 'none',
-                            }}
-                          >
-                            {task.content}
-                          </p>
-                          {task.due && (
-                            <p className="text-[10px] opacity-50 mt-0.5">
-                              Due: {new Date(task.due).toLocaleDateString()}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+      {error && (
+        <div className="flex flex-col items-center justify-center h-full p-4 text-center text-red-400">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!error && (
+        <div className="p-3 overflow-y-auto h-full">
+          {(() => {
+            const groups: Record<string, any[]> = {};
+            for (const t of tasks) {
+              const sec = t.section_name || 'No Section';
+              if (!groups[sec]) groups[sec] = [];
+              groups[sec].push(t);
+            }
+            return Object.entries(groups).map(([section, ts]) => (
+              <div key={section} className="mb-4">
+                <h4 className="text-xs font-bold uppercase opacity-60 mb-1">{section}</h4>
+                <ul className="space-y-1">
+                  {ts.map((t) => (
+                    <li key={t.id} className="text-sm truncate" title={t.content}>
+                      {t.content}
+                    </li>
                   ))}
-                </div>
-              )}
-            </div>
-          ))
-        )}
-      </div>
+                </ul>
+              </div>
+            ));
+          })()}
+        </div>
+      )}
     </div>
   );
 }
