@@ -1,7 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { RefreshCw, ListTodo } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { RefreshCw, ListTodo, Check } from 'lucide-react';
+import { getInverseColor } from '../../utils/colors';
+
+interface Task {
+  id: string;
+  content: string;
+  section_name: string;
+  is_completed: boolean;
+}
 
 interface TodoistWidgetProps {
   blur?: number;
@@ -24,12 +32,15 @@ export default function TodoistWidget({
   onSettingsChange,
   fontColor,
 }: TodoistWidgetProps) {
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [serverTasks, setServerTasks] = useState<Task[]>([]);
+  const [localCompletedMap, setLocalCompletedMap] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [lastSyncTime, setLastSyncTime] = useState<number>(Date.now());
+  const [pendingUpdates, setPendingUpdates] = useState<Record<string, boolean>>({});
 
-  const refresh = async () => {
+  const refresh = useCallback(async (forceSync = false) => {
     setLoading(true);
     setError(null);
     try {
@@ -39,14 +50,52 @@ export default function TodoistWidget({
       params.append('t', Date.now().toString());
       const res = await fetch(`/api/todoist?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch tasks');
-      const data = await res.json();
-      setTasks(data);
+      const data: Task[] = await res.json();
+      
+      setServerTasks(data);
+      
+      // Determine if we should sync pending updates to Todoist before refreshing
+      const interval = settings?.refreshInterval || 300000;
+      const timeSinceSync = Date.now() - lastSyncTime;
+      const shouldSyncNow = forceSync || timeSinceSync >= interval;
+      
+      if (shouldSyncNow && Object.keys(pendingUpdates).length > 0) {
+        // Sync all pending updates to Todoist
+        const updatePromises = Object.entries(pendingUpdates).map(([taskId, isCompleted]) => {
+          const token = settings?.apiToken || process.env.TODOIST_TOKEN;
+          const projectId = settings?.projectId || process.env.TODOIST_PROJECT_ID;
+          if (!token || !projectId) return Promise.resolve();
+          
+          return fetch('/api/todoist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId, isCompleted }),
+          });
+        });
+        await Promise.all(updatePromises);
+        setPendingUpdates({});
+      }
+      
+      // Update last sync time if we synced or just fetched fresh data
+      if (shouldSyncNow) {
+        setLastSyncTime(Date.now());
+      }
+      
+      // Merge server tasks with any pending local changes that weren't synced yet
+      // Store completed status from server in localCompletedMap, but preserve unsynced changes
+      const newLocalMap: Record<string, boolean> = { ...localCompletedMap };
+      for (const task of data) {
+        if (!(task.id in pendingUpdates)) {
+          newLocalMap[task.id] = task.is_completed;
+        }
+      }
+      setLocalCompletedMap(newLocalMap);
     } catch (e) {
       setError('Unable to load tasks');
     } finally {
       setLoading(false);
     }
-  };
+  }, [settings, lastSyncTime, pendingUpdates, localCompletedMap]);
 
   useEffect(() => {
     refresh();
@@ -56,6 +105,15 @@ export default function TodoistWidget({
       return () => clearInterval(id);
     }
   }, [refreshKey, settings?.refreshInterval, settings?.apiToken, settings?.projectId]);
+
+  const toggleTask = async (taskId: string) => {
+    const current = localCompletedMap[taskId] || false;
+    const newValue = !current;
+    
+    // Update local state immediately
+    setLocalCompletedMap(prev => ({ ...prev, [taskId]: newValue }));
+    setPendingUpdates(prev => ({ ...prev, [taskId]: newValue }));
+  };
 
   if (isEditing) {
     return (
@@ -108,7 +166,7 @@ export default function TodoistWidget({
     >
       <div className="absolute top-2 right-2 z-10">
         <button
-          onClick={refresh}
+          onClick={() => refresh()}
           disabled={loading}
           className="p-1 bg-black/50 rounded-full hover:bg-white/20 text-white/70"
           title="Refresh"
@@ -125,22 +183,43 @@ export default function TodoistWidget({
 
       {!error && (
         <div className="p-3 overflow-y-auto h-full">
+          <h3 className="font-bold mb-3 text-xl" style={{ color: fontColor || 'inherit' }}>ToDoist</h3>
           {(() => {
-            const groups: Record<string, any[]> = {};
-            for (const t of tasks) {
+            const groups: Record<string, Task[]> = {};
+            for (const t of serverTasks) {
               const sec = t.section_name || 'No Section';
               if (!groups[sec]) groups[sec] = [];
               groups[sec].push(t);
             }
-            return Object.entries(groups).map(([section, ts]) => (
+            return Object.entries(groups).map(([section, tasks]) => (
               <div key={section} className="mb-4">
                 <h4 className="text-xs font-bold uppercase opacity-60 mb-1">{section}</h4>
                 <ul className="space-y-1">
-                  {ts.map((t) => (
-                    <li key={t.id} className="text-sm truncate" title={t.content}>
-                      {t.content}
-                    </li>
-                  ))}
+                  {tasks.map((t) => {
+                    const isCompleted = localCompletedMap[t.id] || false;
+                    return (
+                      <li key={t.id} className="group flex items-center gap-2 bg-white/5 p-2 rounded-lg hover:bg-white/10 transition">
+                        <button
+                          onClick={() => toggleTask(t.id)}
+                          className="w-5 h-5 rounded border flex items-center justify-center transition flex-shrink-0"
+                          style={{
+                            backgroundColor: isCompleted ? (fontColor || '#22c55e') : 'transparent',
+                            borderColor: fontColor || (isCompleted ? '#22c55e' : 'rgba(255,255,255,0.3)')
+                          }}
+                          title={isCompleted ? 'Mark incomplete' : 'Mark complete'}
+                        >
+                          {isCompleted && <Check size={12} style={{ color: fontColor ? getInverseColor(fontColor) : '#000000' }} />}
+                        </button>
+                        <span 
+                          className={`text-sm truncate flex-1 ${isCompleted ? 'line-through opacity-30' : ''}`} 
+                          style={{ color: fontColor || 'inherit' }}
+                          title={t.content}
+                        >
+                          {t.content}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ));
