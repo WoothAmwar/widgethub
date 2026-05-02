@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
 
 interface TabWidgetProps {
   blur?: number;
@@ -11,6 +12,7 @@ interface TabWidgetProps {
     useProxy?: boolean;
   };
   onSettingsChange?: (settings: { url?: string; useProxy?: boolean }) => void;
+  fontColor?: string;
 }
 
 const DEFAULT_URL = 'https://example.com';
@@ -20,10 +22,19 @@ export default function TabWidget({
   isEditing = false, 
   isHidden = false, 
   settings, 
-  onSettingsChange 
+  onSettingsChange,
+  fontColor
 }: TabWidgetProps) {
   const [url, setUrl] = useState(settings?.url || DEFAULT_URL);
   const [useProxy, setUseProxy] = useState(settings?.useProxy || false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Force expand in edit mode
+  useEffect(() => {
+    if (isEditing) {
+      setIsCollapsed(false);
+    }
+  }, [isEditing]);
 
   // Sync settings
   const handleUrlChange = (urlValue: string) => {
@@ -47,13 +58,46 @@ export default function TabWidget({
 
   return (
     <div 
-      className="flex flex-col w-full h-full rounded-2xl overflow-hidden relative transition-colors duration-300"
+      className={`flex flex-col w-full rounded-2xl overflow-hidden relative transition-all duration-300 ${isCollapsed ? 'h-12 bg-black/20' : 'h-full'}`}
       style={{ 
         backdropFilter: `blur(${blur}px)`,
         backgroundColor: `rgba(0, 0, 0, 0)`
       }}
     >
-      {isEditing ? (
+      {/* Collapse Toggle - Only in View Mode */}
+      {!isEditing && (
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="absolute top-2 right-2 z-50 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors text-white"
+          title={isCollapsed ? "Expand" : "Collapse"}
+        >
+          {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+        </button>
+      )}
+
+      {isCollapsed && (
+        <div className="flex items-center px-4 h-12 w-full justify-between pr-10">
+          <div className="flex items-center gap-2 truncate">
+            <span className="text-xs opacity-60">🔗</span>
+            <span className="text-xs font-medium truncate opacity-70" style={{ color: fontColor }}>
+              {url.replace(/^https?:\/\//, '').split('/')[0]}
+            </span>
+          </div>
+          <a 
+            href={url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="p-1 hover:bg-white/10 rounded transition-colors"
+            title="Open in new tab"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink size={12} className="opacity-50" style={{ color: fontColor }} />
+          </a>
+        </div>
+      )}
+
+      <div className={`flex flex-col h-full w-full ${isCollapsed ? 'hidden' : ''}`}>
+        {isEditing ? (
         <div className="flex flex-col h-full w-full p-4 space-y-3 overflow-y-auto">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs opacity-60">🔗</span>
@@ -102,6 +146,7 @@ export default function TabWidget({
           />
         </div>
       )}
+      </div>
     </div>
   );
 }
