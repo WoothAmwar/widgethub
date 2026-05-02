@@ -70,24 +70,6 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
 
   return (
     <>
-      {/* Blur Control (Bottom Left) */}
-      {isEditing && (
-        <div className="fixed bottom-6 left-6 z-50 bg-black/80 backdrop-blur-md p-3 rounded-xl border border-white/10 flex flex-col gap-1 w-64">
-            <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-white uppercase font-bold tracking-wider">Effect Blur</span>
-                <span className="text-white text-xs">{blur}px</span>
-            </div>
-            <input 
-                type="range" 
-                min="0" 
-                max="40" 
-                value={blur} 
-                onChange={(e) => onUpdateBlur(parseInt(e.target.value))}
-                className="w-full accent-green-500 cursor-pointer"
-            />
-        </div>
-      )}
-
       <div className="fixed bottom-6 right-10 flex items-center gap-2 z-50">
         {isEditing && (
           <div className="flex gap-2 items-center animate-in slide-in-from-right-5 fade-in duration-300">
@@ -123,7 +105,8 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
                         <button onClick={() => { onAddWidget('time'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-r border-b border-white/5">Time</button>
                         <button onClick={() => { onAddWidget('date'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-b border-white/5">Date</button>
                         <button onClick={() => { onAddWidget('todo'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-r border-b border-white/5">Todo</button>
-                        <button onClick={() => { onAddWidget('youtube'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-b border-white/5">YouTube</button>
+                        <button onClick={() => { onAddWidget('todoist'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-b border-white/5">Todoist</button>
+                        <button onClick={() => { onAddWidget('youtube'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-r border-b border-white/5">YouTube</button>
                         <button onClick={() => { onAddWidget('pomodoro'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-r border-b border-white/5">Pomodoro</button>
                         <button onClick={() => { onAddWidget('weather'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-b border-white/5">Weather</button>
                         <button onClick={() => { onAddWidget('spotify'); setShowAddMenu(false); }} className="py-3 px-2 text-sm text-white hover:bg-white/10 transition border-r border-b border-white/5">Spotify</button>
@@ -288,6 +271,23 @@ export function Controls({ isEditing, disableEdit, onToggleEdit, onAddWidget, on
                               />
                           </div>
                       </div>
+                  </div>
+
+                  {/* Global Blur Setting */}
+                  <div className="border-t border-white/10 pt-4">
+                      <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">Global Background Blur</label>
+                      <div className="flex items-center gap-4">
+                          <input 
+                              type="range" 
+                              min="0" 
+                              max="40" 
+                              value={blur} 
+                              onChange={(e) => onUpdateBlur(parseInt(e.target.value))}
+                              className="flex-1 accent-blue-500 cursor-pointer"
+                          />
+                          <span className="text-white text-sm w-12 text-right">{blur}px</span>
+                      </div>
+                      <p className="text-[10px] text-zinc-400 mt-1">Blurs the background while keeping widgets sharp. Overrides individual widget blur.</p>
                   </div>
                </div>
 

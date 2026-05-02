@@ -34,6 +34,7 @@ const INITIAL_STATE: AppState = {
     colorValue: '#1a1a1a', // Default dark bg
     fontColorValue: '#ffffff', // Default white text
   },
+  blur: 10,
   isEditing: false,
   maxWidgetsPerColumn: 3,
   wakeLock: true,
@@ -428,15 +429,23 @@ export default function Home() {
       onDragEnd={handleDragEnd}
     >
       <main 
-        className="h-screen w-full flex overflow-hidden transition-all duration-500 bg-cover bg-center relative"
-        style={{ 
-            backgroundImage: state.background.activeType === 'image' && state.background.imageValue ? `url(${state.background.imageValue})` : undefined,
-            backgroundColor: state.background.activeType === 'solid' ? state.background.colorValue : undefined,
-            '--widget-font-color': state.background.fontColorValue || '#ffffff',
-            '--widget-text-border-color': state.background.textBorderColorValue || 'transparent',
-            color: 'var(--widget-font-color)'
+        className="h-screen w-full flex overflow-hidden relative"
+        style={{
+          '--widget-font-color': state.background.fontColorValue || '#ffffff',
+          '--widget-text-border-color': state.background.textBorderColorValue || 'transparent',
+          color: 'var(--widget-font-color)'
         } as React.CSSProperties}
       >
+        {/* Background Layer with Global Blur */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-all duration-500"
+          style={{
+            backgroundImage: state.background.activeType === 'image' && state.background.imageValue ? `url(${state.background.imageValue})` : undefined,
+            backgroundColor: state.background.activeType === 'solid' ? state.background.colorValue : undefined,
+            filter: (state.blur !== undefined ? state.blur : 10) > 0 ? `blur(${state.blur !== undefined ? state.blur : 10}px)` : 'none'
+          }}
+        />
+
         {Object.values(state.columns).every(col => col.length === 0) && !state.isEditing && <GuideModal />}
 
         {state.isEditing && (
@@ -454,12 +463,12 @@ export default function Home() {
         )}
 
         {!mounted ? null : (
-            <>
+            <div className="relative z-10 flex h-full w-full">
                 <Column 
                     id="left" 
                     widgets={state.columns.left} 
                     isEditing={state.isEditing} 
-                    blur={state.blur !== undefined ? state.blur : 10}
+                    blur={0}
                     width={state.columnWidths?.left ?? 25}
                     onRemoveWidget={removeWidget} 
                     onUpdateWidgetPosition={updateWidgetPosition}
@@ -472,7 +481,7 @@ export default function Home() {
                     id="middle" 
                     widgets={state.columns.middle} 
                     isEditing={state.isEditing} 
-                    blur={state.blur !== undefined ? state.blur : 10}
+                    blur={0}
                     width={state.columnWidths?.middle ?? 50}
                     onRemoveWidget={removeWidget} 
                     onUpdateWidgetPosition={updateWidgetPosition}
@@ -485,7 +494,7 @@ export default function Home() {
                     id="right" 
                     widgets={state.columns.right} 
                     isEditing={state.isEditing} 
-                    blur={state.blur !== undefined ? state.blur : 10}
+                    blur={0}
                     width={state.columnWidths?.right ?? 25}
                     onRemoveWidget={removeWidget} 
                     onUpdateWidgetPosition={updateWidgetPosition}
@@ -494,7 +503,7 @@ export default function Home() {
                     onUpdateColumnWidth={updateColumnWidth}
                     fontColor={state.background.fontColorValue}
                 />
-            </>
+            </div>
         )}
 
         <DragOverlay>
@@ -504,7 +513,7 @@ export default function Home() {
                      widget={activeWidget} 
                      totalInColumn={1} 
                      isEditing={true} 
-                     blur={state.blur !== undefined ? state.blur : 10}
+                     blur={0}
                      onRemove={() => {}} 
                      onUpdatePosition={() => {}} 
                      onUpdateSettings={() => {}}

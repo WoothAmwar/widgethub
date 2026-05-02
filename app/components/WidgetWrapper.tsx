@@ -7,12 +7,14 @@ import { GripVertical, X, Settings, Square, CheckSquare } from 'lucide-react';
 import TimeWidget from './widgets/TimeWidget';
 import DateWidget from './widgets/DateWidget';
 import TodoWidget from './widgets/TodoWidget';
+import TodoistWidget from './widgets/TodoistWidget';
 import YoutubeWidget from './widgets/YoutubeWidget';
 import PomodoroWidget from './widgets/PomodoroWidget';
 import WeatherWidget from './widgets/WeatherWidget';
 import SpotifyWidget from './widgets/SpotifyWidget';
 import WaterLogWidget from './widgets/WaterLogWidget';
 import SpacerWidget from './widgets/SpacerWidget';
+import TelegramWidget from './widgets/TelegramWidget';
 
 interface WidgetWrapperProps {
     widget: Widget;
@@ -109,6 +111,7 @@ export function WidgetWrapper({
       case 'time': return <TimeWidget {...widgetProps} />;
       case 'date': return <DateWidget {...widgetProps} />;
       case 'todo': return <TodoWidget {...widgetProps} />;
+      case 'todoist': return <TodoistWidget {...widgetProps} />;
       case 'youtube': return <YoutubeWidget {...widgetProps} />;
       case 'pomodoro': return <PomodoroWidget {...widgetProps} />;
       case 'weather': return <WeatherWidget {...widgetProps} />;
@@ -116,6 +119,7 @@ export function WidgetWrapper({
       case 'spotify_hidden': return <SpotifyWidget {...widgetProps} isHidden={true} />;
       case 'waterlog': return <WaterLogWidget {...widgetProps} />;
       case 'spacer': return <SpacerWidget isEditing={isEditing} />;
+      case 'telegram': return <TelegramWidget {...widgetProps} />;
       default: return null;
     }
   };
