@@ -8,6 +8,7 @@ import TimeWidget from './widgets/TimeWidget';
 import DateWidget from './widgets/DateWidget';
 import TodoWidget from './widgets/TodoWidget';
 import TodoistWidget from './widgets/TodoistWidget';
+import TabWidget from './widgets/TabWidget';
 import YoutubeWidget from './widgets/YoutubeWidget';
 import PomodoroWidget from './widgets/PomodoroWidget';
 import WeatherWidget from './widgets/WeatherWidget';
@@ -113,6 +114,7 @@ export function WidgetWrapper({
       case 'todo': return <TodoWidget {...widgetProps} />;
       case 'todoist': return <TodoistWidget {...widgetProps} />;
       case 'youtube': return <YoutubeWidget {...widgetProps} />;
+      case 'tab': return <TabWidget {...widgetProps} />;
       case 'pomodoro': return <PomodoroWidget {...widgetProps} />;
       case 'weather': return <WeatherWidget {...widgetProps} />;
       case 'spotify': return <SpotifyWidget {...widgetProps} />;

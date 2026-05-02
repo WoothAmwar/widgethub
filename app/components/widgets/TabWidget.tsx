@@ -8,8 +8,9 @@ interface TabWidgetProps {
   isHidden?: boolean;
   settings?: {
     url?: string;
+    useProxy?: boolean;
   };
-  onSettingsChange?: (settings: { url?: string }) => void;
+  onSettingsChange?: (settings: { url?: string; useProxy?: boolean }) => void;
 }
 
 const DEFAULT_URL = 'https://example.com';
@@ -22,11 +23,17 @@ export default function TabWidget({
   onSettingsChange 
 }: TabWidgetProps) {
   const [url, setUrl] = useState(settings?.url || DEFAULT_URL);
+  const [useProxy, setUseProxy] = useState(settings?.useProxy || false);
 
   // Sync settings
   const handleUrlChange = (urlValue: string) => {
     setUrl(urlValue);
-    if (onSettingsChange) onSettingsChange({ ...settings, url: urlValue });
+    if (onSettingsChange) onSettingsChange({ ...settings, url: urlValue, useProxy });
+  };
+
+  const handleUseProxyChange = (proxyValue: boolean) => {
+    setUseProxy(proxyValue);
+    if (onSettingsChange) onSettingsChange({ ...settings, url, useProxy: proxyValue });
   };
 
   const validateUrl = (urlString: string) => {
@@ -66,11 +73,23 @@ export default function TabWidget({
               <p className="text-xs text-red-400">Please enter a valid URL</p>
             )}
           </div>
+          
+          <div className="space-y-2 mt-2">
+            <label className="flex items-start space-x-2 text-sm opacity-80 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useProxy}
+                onChange={(e) => handleUseProxyChange(e.target.checked)}
+                className="mt-1 rounded bg-white/10 border-transparent focus:border-transparent focus:ring-0"
+              />
+              <span className="text-xs">Use Proxy (Bypasses security restrictions for unsupported sites. May break some sites.)</span>
+            </label>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col h-full w-full relative">
           <iframe
-            src={url}
+            src={useProxy ? `/api/proxy?url=${encodeURIComponent(url)}` : url}
             style={{
               width: '100%',
               height: '100%',

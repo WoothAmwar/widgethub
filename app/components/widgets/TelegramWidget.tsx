@@ -191,14 +191,45 @@ export default function TelegramWidget({
       );
     }
 
+    if (!webAppUrl) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full w-full bg-[#1a1a1a] rounded-[12px] p-4 text-center relative">
+          <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 flex items-center px-2">
+            <a
+              href={iframeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs opacity-60 hover:opacity-100 flex items-center gap-1"
+            >
+              <MessageCircle size={12} />
+              @{botUsername.replace('@', '')}
+            </a>
+          </div>
+          <MessageCircle className="w-12 h-12 text-blue-400 mb-3 mt-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">@{botUsername.replace('@', '')}</h3>
+          <p className="text-sm text-white/60 mb-4 px-2">
+            Telegram blocks direct embedding of t.me links. Open in Telegram or provide a Web App URL in settings.
+          </p>
+          <a
+            href={iframeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-[#24A1DE] hover:bg-[#1d8bcb] text-white px-5 py-2 rounded-full text-sm font-medium transition-colors"
+          >
+            Open in Telegram
+          </a>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col h-full w-full relative">
-        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 flex items-center px-2">
+        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 flex items-center px-2 pointer-events-none">
           <a
             href={`https://t.me/${botUsername.replace('@', '')}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs opacity-60 hover:opacity-100 flex items-center gap-1"
+            className="text-xs opacity-60 hover:opacity-100 flex items-center gap-1 pointer-events-auto"
           >
             <MessageCircle size={12} />
             @{botUsername.replace('@', '')}
